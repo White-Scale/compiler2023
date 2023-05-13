@@ -1,9 +1,3 @@
-//TODO: 是否要做结构体（定义及其访问）
-//TODO: Specifier等类似乎不太好抽象出节点来，不知道需要么
-//TODO: 好像文档中的语法没有指针？需要做吗？
-//TODO: 以及文档中好像没有位运算等二元操作，好像可扩展性挺强的……
-//TODO: 括号表达式有必要吗？……
-
 #pragma once
 #include <iostream>
 #include <vector>
@@ -44,16 +38,30 @@ namespace AST{
 
     class Declaration : public Node;
         class VarDec : public Declaration;
+            class VarInit : public VarDec;
+            using VarList = std::vector<VarInit*>;
         class FunDec : public Declaration;
+            class Arg : public FunDec;
+            class ArgList : public std::vector<Arg*>;
+            class FunBody public FunDec;
+        class TypeDec : public Declaration;
+
+    class VarType : public Node;
+        class BasicType : public VarType;   //INT, FLOAT
+        class ArrayType : public VarType;   //VarType LB INT RB
+        class StructType : public VarType;  //STRUCT Tag
+            class FieldDec : public StructType; //Specifier VarDecList SEMI
+            using FieldList = std::vector<std::string>;
 
     class Statement : public Node;
         class CompStmt : public Statement;  //LC DefList StmtList RC, Statement Blocks
         class IfStmt : public Statement;    //IF LP Exp RP Stmt
         class RetStmt : public Statement;   //RETURN Exp SEMI
-        class IfElseStmt : public Statement;    //IF LP Exp RP Stmt ELSE Stmt
+        // class IfElseStmt : public Statement;    //IF LP Exp RP Stmt ELSE Stmt
         class WhileStmt : public Statement; //WHILE LP Exp RP Stmt
+        class ForStmt : public Statement;   //FOR LP Exp SEMI Exp SEMI Exp RP Stmt
 
-    class Definition : public Node;     //Def DefList
+    // class Definition : public Node;     //Def DefList
 
     class Expression : public Node;
         class AssignOpExpr : public Expression; //Exp ASSIGNOP Exp
@@ -78,6 +86,219 @@ namespace AST {
             ~Node() {}
             virtual llvm::Value* CodeGen() = 0;
     };
+
+    //Program Interface
+    class Program : public Node {
+        public:
+            std::vector<Declaration*> _Decs;
+            Program(std::vector<Declaration*> _Decs):_Decs(_Decs){};
+            ~Program(){};
+            llvm::Value* CodeGen();
+    };
+    
+    //Declaration Interface
+    class Declaration : public Node {
+        public:
+            Declaration(){}
+            ~Declaration(){}
+            virtual llvm::Value* CodeGen() = 0;
+    };
+
+    //Varaible Declaration
+    class VarDec : public Declaration {
+        public:
+            VarType* _VarType;
+            VarList* _VarList;
+            VarDec(VarType* _VarType, VarList* _VarList):_VarType(_VarType), _VarList(_VarList){};
+            ~VarDec(){};
+            llvm::Value* CodeGen();
+    };
+
+    //a variable declaration with initialization
+    class VarInit : public VarDec {
+        public:
+            std::string _name;      //variable name
+            Expression* _value;      // possible value
+            VarInit(std::string _name, Expression* _value):_name(_name), _value(_value){};
+            ~VarInit(){};
+            llvm::Value* CodeGen() {return NULL};
+    };
+
+    //Function Declaration
+    class FunDec : public Declaration {
+        public:
+            VarType* _returnType;   //return type
+            std::string _name;      //function name
+            ArgList* _args;         //arguments
+            FunBody* _body;         //function body
+            FunDec(VarType* _returnType, std::string _name, ArgList* _args, FunBody* _body):_returnType(_returnType), _name(_name), _args(_args), _body(_body){};
+            ~FunDec(){};
+            llvm::Value* CodeGen();
+    };  
+
+    //Function argument
+    class Arg : public FunDec {
+        public:
+            VarType* _type;
+            std::string _name;
+            Arg(VarType* _type, std::string _name):_type(_type), _name(_name){};
+            ~Arg(){};
+            llvm::Value* CodeGen() {return NULL};
+    };
+
+    //Function argument list
+    class ArgList : public std::vector<Arg*> {
+        public:
+            ArgList(){};
+            ~ArgList(){};
+            llvm::Value* CodeGen() {return NULL};
+    };
+
+    //Function body
+    class FunBody : public FunDec {
+        public:
+            CompStmt* _compStmt;
+            FunBody(CompStmt* _compStmt):_compStmt(_compStmt){};
+            ~Funbody(){};
+            llvm::Value* CodeGen();
+    };
+
+    //Type Declaration
+    class TypeDec : public Declaration {
+        public:
+            VarType* _type;
+            TypeDec(VarType* _type):_type(_type){};
+            ~TypeDec(){};
+            llvm::Value* CodeGen();
+    };
+
+    //Base class for variable type
+    class VarType : public Node {
+        public:
+            llvm::Type* _type;
+            VarType(void):_type(NULL){}
+            ~VarType(){}
+            virtual llvm::Type* GetType() = 0;
+            virtual llvm::Value* CodeGen() {return NULL};
+            virtual bool isBasicType() = 0;
+            virtual bool isArrayType() = 0;
+            virtual bool isStructType() = 0;
+    };
+
+    //Basic Type
+    class BasicType : public VarType {
+        public:
+            enum TypeID {
+                _int,
+                _float,
+                _clar,
+                _void,
+                _bool
+            }
+            TypeID _type;
+            BasicType(TypeID _type):_type(_type){};
+            ~BasicType(){};
+            llvm::Type* GetType();
+            bool isBasicType() {return true};
+            bool isArrayType() {return false};
+            bool isStructType() {return false};
+    }
+
+    //Array Type
+    class ArrayType : public VarType {
+        public:
+            VarType* _type;
+            int _size;
+            ArrayType(VarType* _type, int _size):_type(_type), _size(_size){};
+            ArrayType(VarType* _type):_type(_type), _size(0){};     //not initialized
+            ~ArrayType(){};
+            llvm::Type* GetType();
+            bool isBasicType() {return false};
+            bool isArrayType() {return true};
+            bool isStructType() {return false};
+    }
+
+    //Struct Type
+    class StructType : public VarType {
+        FieldDec* _structbody;      //each field in struct body
+        StructType(FieldDec* _structbody):_structbody(_structbody){};
+        ~StructType(){};
+        llvm::Type* GetType();
+        llvm::Type* GenerateStruct(CodeGenerator& __Generator, "<unnamed>");  //generate empty struct
+        llvm::Type* GenerateBody(CodeGenerator& __Generator);
+        bool isBasicType() {return false};
+        bool isArrayType() {return false};
+        bool isStructType() {return true};
+    }
+
+    //Field declaration in struct
+    class FieldDec : public StructType {
+        public:
+            VarType* _type;
+            FieldList* _fieldlist;
+            FieldDec(VarType* _type, FieldList* _fieldlist):_type(_type), _fieldlist(_fieldlist){};
+            ~FieldDec(){};
+            llvm::Value* CodeGen() {return NULL};
+    }
+
+    //Statement Interface
+    class Statement : public Node {
+        public:
+            Statement(){}
+            ~Statement(){}
+            virtual llvm::Value* CodeGen() = 0;
+    };
+
+    //Compound Statement
+    class CompStmt : public Statement {
+        public:
+            Statement* _stmt;
+            CompStmt(Statement* _stmt):_stmt(_stmt){};
+            ~CompStmt(){};
+            llvm::Value* CodeGen();
+    }
+
+    //If Statement
+    class IfStmt : public Statement {
+        public:
+            Expression* _cond;
+            Statement* _then;
+            Statement* _else;
+            IfStmt(Expression* _cond, Statement* _then, Statement* _else = NULL):_cond(_cond), _then(_then), _else(_else){};
+            ~IfStmt(){};
+            llvm::Value* CodeGen();
+    }
+
+    //Return Statement
+    class RetStmt : public Statement {
+        public:
+            Expression* _retval;
+            RetStmt(Expression* _retval):_retval(_retval){};
+            ~RetStmt(){};
+            llvm::Value* CodeGen();
+    }
+
+    //While Statement
+    class WhileStmt : public Statement {
+        public:
+            Expression* _cond;
+            Statement* _body;
+            WhileStmt(Expression* _cond, Statement* _body):_cond(_cond), _body(_body){};
+            ~WhileStmt(){};
+            llvm::Value* CodeGen();
+    }
+
+    //For Statement
+    class ForStmt : public Statement {
+        public:
+            Expression* _init;
+            Expression* _cond;
+            Expression* _step;
+            Statement* _body;
+            ForStmt(Expression* _init, Expression* _cond, Expression* _step, Statement* _body):_init(_init), _cond(_cond), _step(_step), _body(_body){};
+            ~ForStmt(){};
+            llvm::Value* CodeGen();
+    }
 
     //Expression Interface
     class Expression : public Node {
@@ -163,5 +384,14 @@ namespace AST {
             llvm::Value* CodeGen();
     }
 
+    //Exp . ID
+    class StructVisitExpr : public Expression {
+        public:
+            Expression* Struct;
+            std::string name;
+            StructVisitExpr(Expression* Struct, std::string name):Struct(Struct), name(name){};
+            ~StructVisitExpr(){};
+            llvm::Value* CodeGen();
+    }
     
 }
