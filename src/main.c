@@ -1,19 +1,19 @@
 #include <stdio.h>
 
-extern FILE* yyin;
-extern int yylex (void);
+FILE *f;
+extern int yylex(void);
 
 int main(int argc, char **argv)
 {
-    if (argc > 1)
+    if (argc <= 1)
+        return 1;
+    FILE *f = fopen(argv[1], "r");
+    if (!f)
     {
-        if (!(yyin = fopen(argv[1], "r")))
-        {
-            perror(argv[1]);
-            return 1;
-        }
+        perror(argv[1]);
+        return 1;
     }
-    while (yylex() != 0)
-        ;
+    yyrestart(f);
+    yyparse();
     return 0;
 }
