@@ -1,6 +1,9 @@
 %{
  #include <stdio.h>
- #include "lex.yy.c"
+ #include "lex.yy.cpp"
+
+//  extern void yyerror(const char *s);
+ void yyerror(const char *s) { printf("ERROR: %s\n", s); }
 %}
 
 /* declared tokens */
