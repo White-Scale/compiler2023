@@ -26,7 +26,7 @@ ID [a-zA-Z][a-zA-Z_0-9]*
 "||" {return OR;}
 "." {return DOT;}
 "!" {return NOT;}
-"int"|"float"  {return TYPE;}
+"int"|"float"  {if(strcmp(yytext,"int")==0)yylval.Type = Spec_type::INT_1;else yylval.Type = Spec_type::FLOAT_1;return TYPE;}
 "(" {return LP;}
 ")" {return RP;}
 "[" {return LB;}

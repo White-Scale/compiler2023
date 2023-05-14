@@ -12,23 +12,58 @@
     Program *program;
     ExtDef* extDef;
     ExtDefList* extDefList;
+    Specifier* specifier;
+    DefList* defList;
+    VarDec* varDec;
+    FunDec* funDec;
+    ParamDec* paramDec;
+    VarList* varList;
+    CompSt* compSt;
+    Stmt* stmt;
+    StmtList* stmtList;
+    Def* def;
+    Dec* dec;
+    DecList* decList;
+    Exp* exp;
+    Args* args;
+    ExtDecList* extDecList;
     std::string *string;
     int Int;
     float Float;
+    enum Spec_type Type;
 }
 
 %type <program> Program
 %type <extDef> ExtDef
 %type <extDefList> ExtDefList
+%type <specifier> Specifier
+%type <specifier> StructSpecifier 
+%type <string> OptTag
+%type <string> Tag
+%type <varDec> VarDec
+%type <funDec> FunDec
+%type <paramDec> ParamDec
+%type <varList> VarList
+%type <compSt> CompSt
+%type <stmt> Stmt
+%type <stmtList> StmtList
+%type <def> Def
+%type <dec> Dec
+%type <decList> DecList
+%type <exp> Exp
+%type <args> Args
+%type <extDecList> ExtDecList
+
+%type <defList> DefList
 
 /* declared tokens */
 %token <Int> INT
-%token FLOAT
+%token <Float> FLOAT
 %token <string> ID
 %token PLUS MINUS STAR DIV 
 %token AND OR NOT DOT ASSIGNOP
 %token RELOP
-%token TYPE
+%token <Type> TYPE
 %token LP RP LB RB LC RC
 %token STRUCT RETURN IF ELSE WHILE
 %token SEMI COMMA
@@ -55,43 +90,43 @@ Program     : ExtDefList                        {p = new Program($1);}
 ExtDefList  : ExtDef ExtDefList                 {$2->push_back($1);$$ = $2;}
             | /* empty */                       {$$ = new ExtDefList;}
             ;
-ExtDef      : Specifier ExtDecList SEMI         {;}
-            | Specifier SEMI                    {;}
-            | Specifier FunDec CompSt           {;}
+ExtDef      : Specifier ExtDecList SEMI         {$$=new ExtDef($1,$2,NULL,NULL);}
+            | Specifier SEMI                    {$$=new ExtDef($1,NULL,NULL,NULL);}
+            | Specifier FunDec CompSt           {$$=new ExtDef($1,NULL,$2,$3);}
             ;
-ExtDecList  : VarDec                            {;}
-            | VarDec COMMA ExtDecList           {;}
+ExtDecList  : VarDec                            {$$ = new ExtDecList;$$->push_back($1);}
+            | VarDec COMMA ExtDecList           {$3->push_back($1);$$ = $3;}
             ;
 /* 7.1.3 Specifiers */
-Specifier   : TYPE                              {;}
-            | StructSpecifier                   {;}
+Specifier   : TYPE                              {printf("now we get a type,it is %d\n",$1);$$ = new Specifier($1,NULL,NULL);}
+            | StructSpecifier                   {printf("now we get a type,it is a struct\n");$$=$1;}
             ; 
-StructSpecifier : STRUCT OptTag LC DefList RC   {;}
-            | STRUCT Tag                        {;}
+StructSpecifier : STRUCT OptTag LC DefList RC   {$$=new Specifier(Spec_type::STRUCT_1,$2,$4);}
+            | STRUCT Tag                        {$$=new Specifier(Spec_type::STRUCT_1,$2,NULL);}
             ;
-OptTag      : ID                                {;}
-            | /* empty */                       {;}
+OptTag      : ID                                {$$=$1;}
+            | /* empty */                       {$$=NULL;}
             ;
-Tag         : ID                                {;}
+Tag         : ID                                {$$=$1;}
             ;
 /* Declarators */                               
-VarDec      : ID                                {;}
-            | VarDec LB INT RB                  {;}
+VarDec      : ID                                {$$=new VarDec($1,NULL,0);}
+            | VarDec LB INT RB                  {$$=new VarDec(NULL,$1,$3);}
             ;        
-FunDec      : ID LP VarList RP                  {;}
-            | ID LP RP                          {;}
+FunDec      : ID LP VarList RP                  {$$=new FunDec($1,$3);}
+            | ID LP RP                          {$$=new FunDec($1,NULL);}
             ;
-VarList     : ParamDec COMMA VarList            {;}
-            | ParamDec                          {;}
+VarList     : ParamDec COMMA VarList            {$3->push_back($1);$$ = $3;}
+            | ParamDec                          {$$ = new VarList;$$->push_back($1);}
             ;
-ParamDec    : Specifier VarDec                  {;}
+ParamDec    : Specifier VarDec                  {$$ = new ParamDec($1,$2);}
             ;
 /* Statements */
-CompSt      : LC DefList StmtList RC            {;}
+CompSt      : LC DefList StmtList RC            {$$=new CompSt($2,$3);}
             | /* error recovery*/ error RC      {;}
             ;
-StmtList    : Stmt StmtList                     {;}
-            | /* empty */                       {;}
+StmtList    : Stmt StmtList                     {$2->push_back($1);$$ = $2;}
+            | /* empty */                       {$$ = new StmtList;}
             ;
 Stmt        : Exp SEMI                          {;}
             | CompSt                            {;}
@@ -102,16 +137,16 @@ Stmt        : Exp SEMI                          {;}
             | /* error recovery*/ error SEMI    {;}
             ;
 /*  Local Definitions */
-DefList     : Def DefList                       {;}
-            | /* empty */                       {;}
+DefList     : Def DefList                       {$2->push_back($1);$$ = $2;}
+            | /* empty */                       {$$ = new DefList;}
             ;
-Def         : Specifier DecList SEMI            {;}
+Def         : Specifier DecList SEMI            {$$ = new Def($1,$2);}
             ;
-DecList     : Dec                               {;}
-            | Dec COMMA DecList                 {;}
+DecList     : Dec                               {$$ = new DecList;$$->push_back($1);}
+            | Dec COMMA DecList                 {$3->push_back($1);$$ = $3;}
             ;
-Dec         : VarDec                            {;}
-            | VarDec ASSIGNOP Exp               {;}
+Dec         : VarDec                            {$$= new Dec($1,NULL);}
+            | VarDec ASSIGNOP Exp               {$$= new Dec($1,$3);}
             ;
 /* Expressions */
 Exp         : Exp ASSIGNOP Exp                  {;}
@@ -134,8 +169,8 @@ Exp         : Exp ASSIGNOP Exp                  {;}
             | FLOAT                             {;}
             | /* error recovery*/ error RP      {;}
             ;
-Args        : Exp COMMA Args                    {;}
-            | Exp                               {;}
+Args        : Exp COMMA Args                    {$3->push_back($1);$$ = $3;}
+            | Exp                               {$$ = new Args;$$->push_back($1);}
             ;
 %%
 
