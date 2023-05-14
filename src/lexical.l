@@ -1,5 +1,6 @@
 %{
 #include "syntax.tab.hpp"   
+#include <string>
 %}
 %option yylineno
 %option noyywrap 
@@ -37,9 +38,9 @@ ID [a-zA-Z][a-zA-Z_0-9]*
 "if" {return IF;}
 "else" {return ELSE;}
 "while" {return WHILE;}
-{FLOAT} {return FLOAT;}
-{INT} {return INT;}
-{ID} {return ID;}
+{FLOAT} {yylval.Float = atoi(yytext);return FLOAT;}
+{INT} {yylval.Float = atof(yytext);return INT;}
+{ID} {yylval.string=new std::string(yytext, yyleng);return ID;}
 " "|"\n" {;}
 . {printf("Error type A at Line %d: Mysterious characters \'%s\'\n",yylineno, yytext);}
 %%

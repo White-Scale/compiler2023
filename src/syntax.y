@@ -14,6 +14,7 @@
     ExtDefList* extDefList;
     std::string *string;
     int Int;
+    float Float;
 }
 
 %type <program> Program
