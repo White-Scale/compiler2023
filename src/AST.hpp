@@ -31,50 +31,52 @@
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Target/TargetMachine.h>
 
+class CodeGenContext;
+
 namespace AST{
     class Node;
 
-    class Program : public Node;
+    class Program;
 
-    class Declaration : public Node;
-        class VarDec : public Declaration;
-            class VarInit : public VarDec;
+    class Declaration;
+        class VarDec;
+            class VarInit;
             using VarList = std::vector<VarInit*>;
-        class FunDec : public Declaration;
-            class Arg : public FunDec;
-            class ArgList : public std::vector<Arg*>;
-            class FunBody public FunDec;
-        class TypeDec : public Declaration;
+        class FunDec;
+            class Arg;
+            class ArgList;
+            class FunBody;
+        class TypeDec;
 
-    class VarType : public Node;
-        class BasicType : public VarType;   //INT, FLOAT
-        class ArrayType : public VarType;   //VarType LB INT RB
-        class StructType : public VarType;  //STRUCT Tag
-            class FieldDec : public StructType; //Specifier VarDecList SEMI
+    class VarType;
+        class BasicType;   //INT, FLOAT
+        class ArrayType;   //VarType LB INT RB
+        class StructType;  //STRUCT Tag
+            class FieldDec; //Specifier VarDecList SEMI
             using FieldList = std::vector<std::string>;
 
-    class Statement : public Node;
-        class CompStmt : public Statement;  //LC DefList StmtList RC, Statement Blocks
-        class IfStmt : public Statement;    //IF LP Exp RP Stmt
-        class RetStmt : public Statement;   //RETURN Exp SEMI
-        // class IfElseStmt : public Statement;    //IF LP Exp RP Stmt ELSE Stmt
-        class WhileStmt : public Statement; //WHILE LP Exp RP Stmt
-        class ForStmt : public Statement;   //FOR LP Exp SEMI Exp SEMI Exp RP Stmt
+    class Statement;
+        // class CompStmt;  //LC DefList StmtList RC, Statement Blocks
+        class IfStmt;    //IF LP Exp RP Stmt
+        class RetStmt;   //RETURN Exp SEMI
+        // class IfElseStmt;    //IF LP Exp RP Stmt ELSE Stmt
+        class WhileStmt; //WHILE LP Exp RP Stmt
+        class ForStmt;   //FOR LP Exp SEMI Exp SEMI Exp RP Stmt
 
-    // class Definition : public Node;     //Def DefList
+    // class Definition;     //Def DefList
 
-    class Expression : public Node;
-        class AssignOpExpr : public Expression; //Exp ASSIGNOP Exp
-        class BinaryOpExpr : public Expression; //Exp BINOP Exp
-        class ParenExpr : public Expression;    //LP Exp RP
-        class MinusExpr : public Expression;    //MINUS Exp
-        class NotExpr : public Expression;      //NOT Exp
-        class CallFuncExpr : public Expression; //ID LP Args RP, ID LP RP
-        class ArrayVisitExpr : public Expression;   //Exp LB Exp RB
-        class StructVisitExpr : public Expression;  //Exp DOT ID
-        class IntExpr : public Expression;      //INT
-        class FloatExpr : public Expression;    //FLOAT
-        class IDExpr : public Expression;       //ID
+    class Expression;
+        class AssignOpExpr; //Exp ASSIGNOP Exp
+        class BinaryOpExpr; //Exp BINOP Exp
+        class ParenExpr;    //LP Exp RP
+        class MinusExpr;    //MINUS Exp
+        class NotExpr;      //NOT Exp
+        class CallFuncExpr; //ID LP Args RP, ID LP RP
+        class ArrayVisitExpr;   //Exp LB Exp RB
+        class StructVisitExpr;  //Exp DOT ID
+        class IntExpr;      //INT
+        class FloatExpr;    //FLOAT
+        class IDExpr;       //ID
 }
 
 namespace AST {
@@ -84,16 +86,16 @@ namespace AST {
         public:
             Node(){}
             ~Node() {}
-            virtual llvm::Value* CodeGen() = 0;
+            virtual llvm::Value* CodeGen(CodeGenContext& context) = 0;
     };
 
     //Program Interface
     class Program : public Node {
         public:
-            std::vector<Declaration*> _Decs;
-            Program(std::vector<Declaration*> _Decs):_Decs(_Decs){};
+            std::vector<Declaration*>* _decs;
+            Program(std::vector<Declaration*>* __decs):_decs(__decs){};
             ~Program(){};
-            llvm::Value* CodeGen();
+            llvm::Value* CodeGen(CodeGenContext& context);
     };
     
     //Declaration Interface
@@ -101,7 +103,7 @@ namespace AST {
         public:
             Declaration(){}
             ~Declaration(){}
-            virtual llvm::Value* CodeGen() = 0;
+            virtual llvm::Value* CodeGen(CodeGenContext& context) = 0;
     };
 
     //Varaible Declaration
@@ -109,9 +111,10 @@ namespace AST {
         public:
             VarType* _VarType;
             VarList* _VarList;
-            VarDec(VarType* _VarType, VarList* _VarList):_VarType(_VarType), _VarList(_VarList){};
+            VarDec():_VarType(nullptr), _VarList(nullptr) {}
+            VarDec(VarType* __VarType, VarList* __VarList):_VarType(__VarType), _VarList(__VarList){};
             ~VarDec(){};
-            llvm::Value* CodeGen();
+            llvm::Value* CodeGen(CodeGenContext& context);
     };
 
     //a variable declaration with initialization
@@ -119,9 +122,9 @@ namespace AST {
         public:
             std::string _name;      //variable name
             Expression* _value;      // possible value
-            VarInit(std::string _name, Expression* _value):_name(_name), _value(_value){};
-            ~VarInit(){};
-            llvm::Value* CodeGen() {return NULL};
+            VarInit(const std::string& __name, Expression* __value):_name(__name), _value(__value){}
+            ~VarInit(){}
+            llvm::Value* CodeGen(CodeGenContext& context) {return nullptr;}
     };
 
     //Function Declaration
@@ -131,9 +134,10 @@ namespace AST {
             std::string _name;      //function name
             ArgList* _args;         //arguments
             FunBody* _body;         //function body
-            FunDec(VarType* _returnType, std::string _name, ArgList* _args, FunBody* _body):_returnType(_returnType), _name(_name), _args(_args), _body(_body){};
+            FunDec() : _returnType(nullptr), _args(nullptr), _body(nullptr) {}
+            FunDec(VarType* __returnType, const std::string& __name, ArgList* __args, FunBody* __body):_returnType(__returnType), _name(__name), _args(__args), _body(__body){};
             ~FunDec(){};
-            llvm::Value* CodeGen();
+            llvm::Value* CodeGen(CodeGenContext& context);
     };  
 
     //Function argument
@@ -141,9 +145,9 @@ namespace AST {
         public:
             VarType* _type;
             std::string _name;
-            Arg(VarType* _type, std::string _name):_type(_type), _name(_name){};
+            Arg(VarType* __type, std::string __name):_type(__type), _name(__name){};
             ~Arg(){};
-            llvm::Value* CodeGen() {return NULL};
+            llvm::Value* CodeGen(CodeGenContext& context) {return nullptr;}
     };
 
     //Function argument list
@@ -151,35 +155,36 @@ namespace AST {
         public:
             ArgList(){};
             ~ArgList(){};
-            llvm::Value* CodeGen() {return NULL};
+            llvm::Value* CodeGen(CodeGenContext& context) {return nullptr;}
     };
 
     //Function body
     class FunBody : public FunDec {
         public:
-            CompStmt* _compStmt;
-            FunBody(CompStmt* _compStmt):_compStmt(_compStmt){};
-            ~Funbody(){};
-            llvm::Value* CodeGen();
+            std::vector<Statement*>* _stmts;
+            FunBody(std::vector<Statement*>* __stmts):_stmts(__stmts){};
+            ~FunBody(){};
+            llvm::Value* CodeGen(CodeGenContext& context);
     };
 
     //Type Declaration
     class TypeDec : public Declaration {
         public:
             VarType* _type;
-            TypeDec(VarType* _type):_type(_type){};
+            std::string _alias;    // struct _alias{}
+            TypeDec(VarType* __type, const std::string& __alias):_type(__type), _alias(__alias){};
             ~TypeDec(){};
-            llvm::Value* CodeGen();
+            llvm::Value* CodeGen(CodeGenContext& context);
     };
 
     //Base class for variable type
     class VarType : public Node {
         public:
             llvm::Type* _type;
-            VarType(void):_type(NULL){}
+            VarType(void):_type(nullptr){}
             ~VarType(){}
-            virtual llvm::Type* GetType() = 0;
-            virtual llvm::Value* CodeGen() {return NULL};
+            virtual llvm::Type* GetType(CodeGenContext& context) = 0;
+            virtual llvm::Value* CodeGen(CodeGenContext& context) {return nullptr;}
             virtual bool isBasicType() = 0;
             virtual bool isArrayType() = 0;
             virtual bool isStructType() = 0;
@@ -191,72 +196,74 @@ namespace AST {
             enum TypeID {
                 _int,
                 _float,
-                _clar,
+                _char,
                 _void,
                 _bool
-            }
+            };
             TypeID _type;
-            BasicType(TypeID _type):_type(_type){};
+            BasicType(TypeID __type):_type(__type){};
             ~BasicType(){};
-            llvm::Type* GetType();
-            bool isBasicType() {return true};
-            bool isArrayType() {return false};
-            bool isStructType() {return false};
-    }
+            llvm::Type* GetType(CodeGenContext& context);
+            bool isBasicType() {return true;}
+            bool isArrayType() {return false;}
+            bool isStructType() {return false;}
+    };
 
     //Array Type
     class ArrayType : public VarType {
         public:
             VarType* _type;
             int _size;
-            ArrayType(VarType* _type, int _size):_type(_type), _size(_size){};
-            ArrayType(VarType* _type):_type(_type), _size(0){};     //not initialized
+            ArrayType(VarType* __type, int __size):_type(__type), _size(__size){};
+            ArrayType(VarType* __type):_type(__type), _size(0){};     //not initialized
             ~ArrayType(){};
-            llvm::Type* GetType();
-            bool isBasicType() {return false};
-            bool isArrayType() {return true};
-            bool isStructType() {return false};
-    }
+            llvm::Type* GetType(CodeGenContext& context);
+            bool isBasicType() {return false;}
+            bool isArrayType() {return true;}
+            bool isStructType() {return false;}
+    };
 
     //Struct Type
     class StructType : public VarType {
-        FieldDec* _structbody;      //each field in struct body
-        StructType(FieldDec* _structbody):_structbody(_structbody){};
-        ~StructType(){};
-        llvm::Type* GetType();
-        llvm::Type* GenerateStruct(CodeGenerator& __Generator, "<unnamed>");  //generate empty struct
-        llvm::Type* GenerateBody(CodeGenerator& __Generator);
-        bool isBasicType() {return false};
-        bool isArrayType() {return false};
-        bool isStructType() {return true};
-    }
+        public:
+            std::vector<FieldDec*>* _structbody;      //each field in struct body
+            StructType():_structbody(nullptr) {}
+            StructType(std::vector<FieldDec*>* __structbody):_structbody(__structbody){};
+            ~StructType(){};
+            llvm::Type* GetType(CodeGenContext& context);
+            llvm::Type* GenerateStruct(CodeGenContext& context, std::string name="<unnamed>");  //generate empty struct
+            llvm::Type* GenerateBody(CodeGenContext& context);
+            bool isBasicType() {return false;}
+            bool isArrayType() {return false;}
+            bool isStructType() {return true;}
+    };
 
     //Field declaration in struct
     class FieldDec : public StructType {
         public:
             VarType* _type;
             FieldList* _fieldlist;
-            FieldDec(VarType* _type, FieldList* _fieldlist):_type(_type), _fieldlist(_fieldlist){};
+            FieldDec(VarType* __type, FieldList* __fieldlist):_type(__type), _fieldlist(__fieldlist){};
             ~FieldDec(){};
-            llvm::Value* CodeGen() {return NULL};
-    }
+            llvm::Value* CodeGen(CodeGenContext& context) {return nullptr;}
+    };
 
     //Statement Interface
     class Statement : public Node {
         public:
             Statement(){}
             ~Statement(){}
-            virtual llvm::Value* CodeGen() = 0;
+            virtual llvm::Value* CodeGen(CodeGenContext& context) = 0;
     };
 
     //Compound Statement
     class CompStmt : public Statement {
         public:
             Statement* _stmt;
-            CompStmt(Statement* _stmt):_stmt(_stmt){};
+            CompStmt(Statement* __stmt):_stmt(__stmt){};
             ~CompStmt(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //If Statement
     class IfStmt : public Statement {
@@ -264,29 +271,29 @@ namespace AST {
             Expression* _cond;
             Statement* _then;
             Statement* _else;
-            IfStmt(Expression* _cond, Statement* _then, Statement* _else = NULL):_cond(_cond), _then(_then), _else(_else){};
+            IfStmt(Expression* __cond, Statement* __then, Statement* __else = nullptr):_cond(__cond), _then(__then), _else(__else){};
             ~IfStmt(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //Return Statement
     class RetStmt : public Statement {
         public:
             Expression* _retval;
-            RetStmt(Expression* _retval):_retval(_retval){};
+            RetStmt(Expression* __retval):_retval(__retval){};
             ~RetStmt(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //While Statement
     class WhileStmt : public Statement {
         public:
             Expression* _cond;
             Statement* _body;
-            WhileStmt(Expression* _cond, Statement* _body):_cond(_cond), _body(_body){};
+            WhileStmt(Expression* __cond, Statement* __body):_cond(__cond), _body(__body){};
             ~WhileStmt(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //For Statement
     class ForStmt : public Statement {
@@ -295,103 +302,103 @@ namespace AST {
             Expression* _cond;
             Expression* _step;
             Statement* _body;
-            ForStmt(Expression* _init, Expression* _cond, Expression* _step, Statement* _body):_init(_init), _cond(_cond), _step(_step), _body(_body){};
+            ForStmt(Expression* __init, Expression* __cond, Expression* __step, Statement* _body):_init(__init), _cond(__cond), _step(__step), _body(_body){};
             ~ForStmt(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //Expression Interface
     class Expression : public Node {
         public:
             Expression(){}
             ~Expression(){}
-            virtual llvm::Value* CodeGen() = 0;
-    }
+            virtual llvm::Value* CodeGen(CodeGenContext& context) = 0;
+    };
 
     //Exp ASSIGN Exp
-    class AssignOpExpr : public Expression {
+    class AssignOpExpr {
         public:
             Expression* LHS;
             Expression* RHS;
             AssignOpExpr(Expression* LHS, Expression* RHS):LHS(LHS), RHS(RHS){};
             ~AssignOpExpr(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //Exp BinOP RHS
-    class BinaryOpExpr : public Expression {
+    class BinaryOpExpr {
         public:
             char Operator;//AND\OR\RELOP\PLUS...
             Expression* LHS;
             Expression* RHS;
             BinaryOpExpr(char Operator, Expression* LHS, Expression* RHS):Operator(Operator), LHS(LHS), RHS(RHS){};
             ~BinaryOpExpr() {};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //Minus Expression
-    class MinusExpr : public Expression {
+    class MinusExpr {
         public:
             Expression* Expr;
             MinusExpr(Expression* Expr) : Expr(Expr){};
             ~MinusExpr(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //Not Expression
-    class NotExpr : public Expression {
+    class NotExpr {
         public:
             Expression* Expr;
             NotExpr(Expression* Expr) : Expr(Expr){};
             ~NotExpr(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //Exp [ Exp ]
-    class ArrayVisitExpr : public Expression {
+    class ArrayVisitExpr {
         public:
             Expression* Array;
             Expression* Index;
             ArrayVisitExpr(Expression* Array, Expression* Index):Array(Array), Index(Index){};
             ~ArrayVisitExpr(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //INT
-    class IntExpr : public Expression {
+    class IntExpr {
         public:
             int value;
             IntExpr(int value):value(value){};
             ~IntExpr(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //FLOAT
-    class FloatExpr : public Expression {
+    class FloatExpr {
         public:
             float value;
             FloatExpr(float value):value(value){};
             ~FloatExpr(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //ID
-    class IDExpr : public Expression {
+    class IDExpr {
         public:
             std::string name;
             IDExpr(std::string str):name(str){};
             ~IDExpr(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
 
     //Exp . ID
-    class StructVisitExpr : public Expression {
+    class StructVisitExpr {
         public:
             Expression* Struct;
             std::string name;
             StructVisitExpr(Expression* Struct, std::string name):Struct(Struct), name(name){};
             ~StructVisitExpr(){};
-            llvm::Value* CodeGen();
-    }
+            llvm::Value* CodeGen(CodeGenContext& context);
+    };
     
 }
