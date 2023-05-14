@@ -1,15 +1,21 @@
 %{
  #include <stdio.h>
+ #include <string>
+ #include "AST.h"
  #include "lex.yy.cpp"
-
-//  extern void yyerror(const char *s);
  void yyerror(const char *s) { printf("ERROR: %s\n", s); }
 %}
 
+%union {
+    Node *node;
+    std::string *string;
+    int Int;
+}
+
 /* declared tokens */
-%token INT
+%token <Int> INT
 %token FLOAT
-%token ID
+%token <string> ID
 %token PLUS MINUS STAR DIV 
 %token AND OR NOT DOT ASSIGNOP
 %token RELOP
@@ -30,6 +36,8 @@
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
+
+
 
 %%
 /* High-level Definitions */
