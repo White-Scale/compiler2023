@@ -1,7 +1,8 @@
 %{
-#include "syntax.tab.h"   
+#include "syntax.tab.hpp"   
 %}
 %option yylineno
+%option noyywrap 
 digit [0-9]
 letter [a-zA-Z]
 /* INT [+−]?[0-9]+ */

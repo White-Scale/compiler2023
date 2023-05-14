@@ -1,11 +1,12 @@
-CC=gcc
-syntax.tab.h:
+CC=g++
+syntax.tab.hpp:
 	bison -d -v syntax.y
-lex.yy.c: lexical.l syntax.tab.h
-	flex lexical.l
+lex.yy.cpp: lexical.l syntax.tab.hpp
+	flex -o lex.yy.cpp lexical.l 
 # scanner: main.c lex.yy.c
 # 	$(CC) main.c lex.yy.c -lfl -o scanner
-syntax.tab.c: syntax.y lex.yy.c
-	bison -d syntax.y
-parser: main.c syntax.tab.c 
-	$(CC) main.c syntax.tab.c -lfl -ly -o parser
+syntax.tab.cpp: syntax.y lex.yy.cpp
+	bison -d syntax.y -o syntax.tab.cpp
+parser: main.cpp syntax.tab.cpp 
+# $(CC) main.cpp syntax.tab.cpp lex.yy.cpp -lfl -ly -o parser
+	$(CC) main.cpp syntax.tab.cpp -lfl -ly -o parser
