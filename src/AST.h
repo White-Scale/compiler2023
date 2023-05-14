@@ -210,11 +210,11 @@ private:
 public:
     StmtList *_StmtList;
     DefList *_DefList;
-    CompSt(DefList *_DefList,StmtList *_StmtList);
+    CompSt(DefList *_DefList, StmtList *_StmtList);
     ~CompSt();
 };
 
-CompSt::CompSt(DefList *_DefList,StmtList *_StmtList)
+CompSt::CompSt(DefList *_DefList, StmtList *_StmtList)
 {
     this->_StmtList = _StmtList;
     this->_DefList = _DefList;
