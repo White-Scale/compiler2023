@@ -3,14 +3,22 @@
  #include <string>
  #include "AST.h"
  #include "lex.yy.cpp"
+ Program * p;
  void yyerror(const char *s) { printf("ERROR: %s\n", s); }
 %}
 
 %union {
     Node *node;
+    Program *program;
+    ExtDef* extDef;
+    ExtDefList* extDefList;
     std::string *string;
     int Int;
 }
+
+%type <program> Program
+%type <extDef> ExtDef
+%type <extDefList> ExtDefList
 
 /* declared tokens */
 %token <Int> INT
@@ -41,10 +49,10 @@
 
 %%
 /* High-level Definitions */
-Program     : ExtDefList                        {;}
+Program     : ExtDefList                        {p = new Program($1);}
             ;                                   
-ExtDefList  : ExtDef ExtDefList                 {;}
-            | /* empty */                       {;}
+ExtDefList  : ExtDef ExtDefList                 {$2->push_back($1);$$ = $2;}
+            | /* empty */                       {$$ = new ExtDefList;}
             ;
 ExtDef      : Specifier ExtDecList SEMI         {;}
             | Specifier SEMI                    {;}
