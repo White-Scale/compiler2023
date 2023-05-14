@@ -1,3 +1,9 @@
 .vscode/
-
+lex.yy.*
+*.tab.c
+*.tab.h
+*.yy.cpp
+*.tab.cpp
+*.tab.hpp
+*.output
 *.exe
