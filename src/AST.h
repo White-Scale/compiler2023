@@ -8,6 +8,8 @@ enum Spec_type
     STRUCT_1
 };
 
+void printTabs(int n);
+
 class ExtDef;
 
 class Specifier;
@@ -42,15 +44,7 @@ public:
     ~Node();
 };
 
-Node::Node(/* args */)
-{
-}
-
-Node::~Node()
-{
-}
-
-class Program : public Node
+class Program
 {
 private:
     /* data */
@@ -58,16 +52,8 @@ public:
     ExtDefList *_ExtDefList;
     Program(ExtDefList *_ExtDefList);
     ~Program();
+    void print(int n);
 };
-
-Program::Program(ExtDefList *ExtDefList)
-{
-    this->_ExtDefList = ExtDefList;
-}
-
-Program::~Program()
-{
-}
 
 class ExtDef
 {
@@ -80,23 +66,8 @@ public:
     CompSt *_CompSt;
     ExtDef(Specifier *_Specifier, ExtDecList *_ExtDecList, FunDec *_FunDec, CompSt *_CompSt);
     ~ExtDef();
+    void print(int n);
 };
-
-ExtDef::ExtDef(Specifier *_Specifier, ExtDecList *_ExtDecList, FunDec *_FunDec, CompSt *_CompSt)
-{
-    this->_Specifier = _Specifier;
-    ;
-    this->_ExtDecList = _ExtDecList;
-    ;
-    this->_FunDec = _FunDec;
-    ;
-    this->_CompSt = _CompSt;
-    ;
-}
-
-ExtDef::~ExtDef()
-{
-}
 
 class Specifier
 {
@@ -108,18 +79,8 @@ public:
     DefList *_DefList;
     Specifier(Spec_type _Type, std::string *_Tag, DefList *_DefList);
     ~Specifier();
+    void print(int n);
 };
-
-inline Specifier::Specifier(Spec_type _Type, std::string *_Tag, DefList *_DefList)
-{
-    this->_Type = _Type;
-    this->_Tag = _Tag;
-    this->_DefList = _DefList;
-}
-
-Specifier::~Specifier()
-{
-}
 
 class VarDec
 {
@@ -131,18 +92,8 @@ public:
     int _Len;
     VarDec(std::string *_Name, VarDec *_VarDec, int _Len);
     ~VarDec();
+    void print(int n);
 };
-
-VarDec::VarDec(std::string *_Name, VarDec *_VarDec, int _Len)
-{
-    this->_Name = _Name;
-    this->_VarDec = _VarDec;
-    this->_Len = _Len;
-}
-
-VarDec::~VarDec()
-{
-}
 
 class FunDec
 {
@@ -153,17 +104,8 @@ public:
     VarList *_VarList;
     FunDec(std::string *_Name, VarList *_VarList);
     ~FunDec();
+    void print(int n);
 };
-
-FunDec::FunDec(std::string *_Name, VarList *_VarList)
-{
-    this->_Name = _Name;
-    this->_VarList = _VarList;
-}
-
-FunDec::~FunDec()
-{
-}
 
 class ParamDec
 {
@@ -174,17 +116,8 @@ public:
     VarDec *_VarDec;
     ParamDec(Specifier *_Specifier, VarDec *_VarDec);
     ~ParamDec();
+    void print(int n);
 };
-
-ParamDec::ParamDec(Specifier *_Specifier, VarDec *_VarDec)
-{
-    this->_Specifier = _Specifier;
-    this->_VarDec = _VarDec;
-}
-
-ParamDec::~ParamDec()
-{
-}
 
 class Stmt
 {
@@ -193,15 +126,8 @@ private:
 public:
     Stmt(/* args */);
     ~Stmt();
+    void print(int n);
 };
-
-Stmt::Stmt(/* args */)
-{
-}
-
-Stmt::~Stmt()
-{
-}
 
 class CompSt
 {
@@ -212,17 +138,8 @@ public:
     DefList *_DefList;
     CompSt(DefList *_DefList, StmtList *_StmtList);
     ~CompSt();
+    void print(int n);
 };
-
-CompSt::CompSt(DefList *_DefList, StmtList *_StmtList)
-{
-    this->_StmtList = _StmtList;
-    this->_DefList = _DefList;
-}
-
-CompSt::~CompSt()
-{
-}
 
 class Def
 {
@@ -233,17 +150,8 @@ public:
     DecList *_DecList;
     Def(Specifier *_Specifier, DecList *_DecList);
     ~Def();
+    void print(int n);
 };
-
-Def::Def(Specifier *_Specifier, DecList *_DecList)
-{
-    this->_Specifier = _Specifier;
-    this->_DecList = _DecList;
-}
-
-Def::~Def()
-{
-}
 
 class Dec
 {
@@ -254,17 +162,8 @@ public:
     Exp *_Exp;
     Dec(VarDec *_VarDec, Exp *_Exp);
     ~Dec();
+    void print(int n);
 };
-
-Dec::Dec(VarDec *_VarDec, Exp *_Exp)
-{
-    this->_VarDec = _VarDec;
-    this->_Exp = _Exp;
-}
-
-Dec::~Dec()
-{
-}
 
 class Exp
 {
@@ -273,12 +172,5 @@ private:
 public:
     Exp(/* args */);
     ~Exp();
+    void print(int n);
 };
-
-Exp::Exp(/* args */)
-{
-}
-
-Exp::~Exp()
-{
-}

@@ -85,7 +85,7 @@
 
 %%
 /* High-level Definitions */
-Program     : ExtDefList                        {p = new Program($1);}
+Program     : ExtDefList                        {p = new Program($1);p->print(0);}
             ;                                   
 ExtDefList  : ExtDef ExtDefList                 {$2->push_back($1);$$ = $2;}
             | /* empty */                       {$$ = new ExtDefList;}
@@ -128,13 +128,13 @@ CompSt      : LC DefList StmtList RC            {$$=new CompSt($2,$3);}
 StmtList    : Stmt StmtList                     {$2->push_back($1);$$ = $2;}
             | /* empty */                       {$$ = new StmtList;}
             ;
-Stmt        : Exp SEMI                          {;}
-            | CompSt                            {;}
-            | RETURN Exp SEMI                   {;}
-            | IF LP Exp RP Stmt  %prec LOWER_THAN_ELSE  {;}
-            | IF LP Exp RP Stmt ELSE Stmt       {;}
-            | WHILE LP Exp RP Stmt              {;}
-            | /* error recovery*/ error SEMI    {;}
+Stmt        : Exp SEMI                          {$$ = new Stmt();}
+            | CompSt                            {$$ = new Stmt();}
+            | RETURN Exp SEMI                   {$$ = new Stmt();}
+            | IF LP Exp RP Stmt  %prec LOWER_THAN_ELSE  {$$ = new Stmt();}
+            | IF LP Exp RP Stmt ELSE Stmt       {$$ = new Stmt();}
+            | WHILE LP Exp RP Stmt              {$$ = new Stmt();}
+            | /* error recovery*/ error SEMI    {$$ = new Stmt();}
             ;
 /*  Local Definitions */
 DefList     : Def DefList                       {$2->push_back($1);$$ = $2;}
@@ -149,25 +149,25 @@ Dec         : VarDec                            {$$= new Dec($1,NULL);}
             | VarDec ASSIGNOP Exp               {$$= new Dec($1,$3);}
             ;
 /* Expressions */
-Exp         : Exp ASSIGNOP Exp                  {;}
-            | Exp AND Exp                       {;}
-            | Exp OR Exp                        {;}
-            | Exp RELOP Exp                     {;}
-            | Exp PLUS Exp                      {;}
-            | Exp MINUS Exp                     {;}
-            | Exp STAR Exp                      {;}
-            | Exp DIV Exp                       {;}
-            | LP Exp RP                         {;}
-            | MINUS Exp  %prec UMINUS           {;}
-            | NOT Exp                           {;}
-            | ID LP Args RP                     {;}
-            | ID LP RP                          {;}
-            | Exp LB Exp RB                     {;}
-            | Exp DOT ID                        {;}
-            | ID                                {;}
-            | INT                               {;}
-            | FLOAT                             {;}
-            | /* error recovery*/ error RP      {;}
+Exp         : Exp ASSIGNOP Exp                  {$$=new Exp();}
+            | Exp AND Exp                       {$$=new Exp();}
+            | Exp OR Exp                        {$$=new Exp();}
+            | Exp RELOP Exp                     {$$=new Exp();}
+            | Exp PLUS Exp                      {$$=new Exp();}
+            | Exp MINUS Exp                     {$$=new Exp();}
+            | Exp STAR Exp                      {$$=new Exp();}
+            | Exp DIV Exp                       {$$=new Exp();}
+            | LP Exp RP                         {$$=new Exp();}
+            | MINUS Exp  %prec UMINUS           {$$=new Exp();}
+            | NOT Exp                           {$$=new Exp();}
+            | ID LP Args RP                     {$$=new Exp();}
+            | ID LP RP                          {$$=new Exp();}
+            | Exp LB Exp RB                     {$$=new Exp();}
+            | Exp DOT ID                        {$$=new Exp();}
+            | ID                                {$$=new Exp();}
+            | INT                               {$$=new Exp();}
+            | FLOAT                             {$$=new Exp();}
+            | /* error recovery*/ error RP      {$$=new Exp();}
             ;
 Args        : Exp COMMA Args                    {$3->push_back($1);$$ = $3;}
             | Exp                               {$$ = new Args;$$->push_back($1);}
