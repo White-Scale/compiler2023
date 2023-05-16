@@ -20,7 +20,8 @@ class CodeGenContext {
         llvm::Value* GetVariable(std::string name);
         void AddVar(std::string name, llvm::Value* val);
         void GenerateIR(AST::Program& ast);
-        ~CodeGenContext() = default;
+        ~CodeGenContext();
+        // ~CodeGenContext() = default;
     private:
         llvm::Function* CurrFunc;
         llvm::BasicBlock* InsertPoint;

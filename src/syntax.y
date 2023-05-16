@@ -1,10 +1,24 @@
 %{
+ #include "AST.hpp"
  #include <stdio.h>
+ #include <string>
  #include "lex.yy.cpp"
+
+
 
 //  extern void yyerror(const char *s);
  void yyerror(const char *s) { printf("ERROR: %s\n", s); }
 %}
+
+
+%union {
+    AST::Expression * expression;
+    std::string * string;
+    int Int;
+    float Float;
+}
+
+%type <expression> Exp;
 
 /* declared tokens */
 %token INT
@@ -30,6 +44,8 @@
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
+
+
 
 %%
 /* High-level Definitions */
@@ -97,7 +113,7 @@ Dec         : VarDec                            {;}
             | VarDec ASSIGNOP Exp               {;}
             ;
 /* Expressions */
-Exp         : Exp ASSIGNOP Exp                  {;}
+Exp         : Exp ASSIGNOP Exp                  {$$ = new AST::AssignOpExpr(NULL,NULL);}
             | Exp AND Exp                       {;}
             | Exp OR Exp                        {;}
             | Exp RELOP Exp                     {;}

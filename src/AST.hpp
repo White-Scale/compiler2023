@@ -316,7 +316,7 @@ namespace AST {
     };
 
     //Exp ASSIGN Exp
-    class AssignOpExpr {
+    class AssignOpExpr : public Expression {
         public:
             Expression* LHS;
             Expression* RHS;
@@ -326,7 +326,7 @@ namespace AST {
     };
 
     //Exp BinOP RHS
-    class BinaryOpExpr {
+    class BinaryOpExpr : public Expression{
         public:
             char Operator;//AND\OR\RELOP\PLUS...
             Expression* LHS;
@@ -337,7 +337,7 @@ namespace AST {
     };
 
     //Minus Expression
-    class MinusExpr {
+    class MinusExpr : public Expression{
         public:
             Expression* Expr;
             MinusExpr(Expression* Expr) : Expr(Expr){};
@@ -346,7 +346,7 @@ namespace AST {
     };
 
     //Not Expression
-    class NotExpr {
+    class NotExpr : public Expression{
         public:
             Expression* Expr;
             NotExpr(Expression* Expr) : Expr(Expr){};
@@ -355,7 +355,7 @@ namespace AST {
     };
 
     //Exp [ Exp ]
-    class ArrayVisitExpr {
+    class ArrayVisitExpr : public Expression{
         public:
             Expression* Array;
             Expression* Index;
@@ -365,7 +365,7 @@ namespace AST {
     };
 
     //INT
-    class IntExpr {
+    class IntExpr : public Expression{
         public:
             int value;
             IntExpr(int value):value(value){};
@@ -374,7 +374,7 @@ namespace AST {
     };
 
     //FLOAT
-    class FloatExpr {
+    class FloatExpr : public Expression{
         public:
             float value;
             FloatExpr(float value):value(value){};
@@ -383,7 +383,7 @@ namespace AST {
     };
 
     //ID
-    class IDExpr {
+    class IDExpr : public Expression{
         public:
             std::string name;
             IDExpr(std::string str):name(str){};
@@ -392,7 +392,7 @@ namespace AST {
     };
 
     //Exp . ID
-    class StructVisitExpr {
+    class StructVisitExpr : public Expression{
         public:
             Expression* Struct;
             std::string name;
