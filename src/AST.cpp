@@ -1,6 +1,6 @@
 //暂时忽略所有错误检查和类型检查/转换
 //缺少注释
-//Todo: BinaryOpExpr, ArrayVisitExpr, IDExpr, CompStmt(?)
+//TODO: BinaryOpExpr, ArrayVisitExpr, IDExpr, CompStmt(?)
 
 #include"CodeGenContext.hpp"
 #include"AST.hpp"
@@ -184,8 +184,30 @@ namespace AST{
     llvm::Value* BinaryOpExpr::CodeGen(CodeGenContext& context){
         llvm::Value* lval = this->LHS->CodeGen(context);
         llvm::Value* rval = this->RHS->CodeGen(context);
+        llvm::Type* ltype = lval->getType();
+        llvm::Type* rtype = rval->getType();
+        if(ltype != rtype){
+            //TODO: alert error and return
+        }
+        llvm::Value* ret = NULL;
         //Todo switch
-
+        if (this->Operator == "+")
+            ret = ltype->isIntegerTy() ? Builder.CreateAdd(lval, rval) : Builder.CreateFAdd(lval, rval);
+        else if(this->Operator == "-")
+            ret = ltype->isIntegerTy() ? Builder.CreateSub(lval, rval) : Builder.CreateFSub(lval, rval);
+        else if(this->Operator == "*")
+            ret = ltype->isIntegerTy() ? Builder.CreateMul(lval, rval) : Builder.CreateFSub(lval, rval);
+        else if(this->Operator == "/")
+            ret = ltype->isIntegerTy() ? Builder.CreateSDiv(lval, rval) : Builder.CreateFDiv(lval, rval);
+        else if(this->Operator == "&")
+            ret = Builder.CreateLogicalAnd(lval, rval);
+        else if(this->Operator == "|")
+            ret = Builder.CreateLogicalOr(lval, rval);
+        else if(this->Operator == "==")
+            ret = ltype->isIntegerTy() ? Builder.CreateICmpEQ(lval, rval) : Builder.CreateFCmpOEQ(lval, rval);
+        else if(this->Operator == "!=")
+            ret = ltype->isIntegerTy() ? Builder.CreateICmpNE(lval, rval) : Builder.CreateFCmpONE(lval, rval);
+        return ret;
     }
 
     //Minus Expression
@@ -204,7 +226,7 @@ namespace AST{
     llvm::Value* ArrayVisitExpr::CodeGen(CodeGenContext& context){
         llvm::Value* array = this->Array->CodeGen(context);
         llvm::Value* index = this->Index->CodeGen(context);
-        return Builder.CreateGEP(array, index, "arraytmp"); //我不懂哪错了
+        return Builder.CreateGEP(array->getType(),array, index, "arraytmp"); //我不懂哪错了
     }
 
     //INT
@@ -224,6 +246,6 @@ namespace AST{
     //ID
     llvm::Value* IDExpr::CodeGen(CodeGenContext& context) {
         llvm::Value* varValue = context.GetVariable(this->name);
-        return Builder.CreateLoad(varValue);    //应该和上面同一个问题
+        return Builder.CreateLoad(varValue->getType(),varValue);    //应该和上面同一个问题
     }
 }

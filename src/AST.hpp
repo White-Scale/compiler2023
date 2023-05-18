@@ -90,6 +90,7 @@ namespace AST {
     };
 
     //Program Interface
+    //Program -> DeclarationList
     class Program : public Node {
         public:
             std::vector<Declaration*>* _decs;
@@ -107,6 +108,8 @@ namespace AST {
     };
 
     //Varaible Declaration
+    //VarDec -> VarType VarList SEMI
+    //VarList -> VarList COMMA VarInit | VarInit
     class VarDec : public Declaration {
         public:
             VarType* _VarType;
@@ -118,6 +121,7 @@ namespace AST {
     };
 
     //a variable declaration with initialization
+    //VarInit -> VarName AssignOP VarValue
     class VarInit : public VarDec {
         public:
             std::string _name;      //variable name
@@ -128,6 +132,10 @@ namespace AST {
     };
 
     //Function Declaration
+    //FunDec -> VarType FunName LP ArgList RP LC FunBody RC
+    //FunDec -> VarType FunName LP RP LC FunBody RC
+    //ArgList -> ArgList COMMA Arg | Arg
+    //FunBody -> StmtList
     class FunDec : public Declaration {
         public:
             VarType* _returnType;   //return type
@@ -141,6 +149,7 @@ namespace AST {
     };  
 
     //Function argument
+    //Arg -> VarType VarName
     class Arg : public FunDec {
         public:
             VarType* _type;
@@ -328,10 +337,10 @@ namespace AST {
     //Exp BinOP RHS
     class BinaryOpExpr : public Expression{
         public:
-            char Operator;//AND\OR\RELOP\PLUS...
+            std::string Operator;//AND\OR\RELOP\PLUS...
             Expression* LHS;
             Expression* RHS;
-            BinaryOpExpr(char Operator, Expression* LHS, Expression* RHS):Operator(Operator), LHS(LHS), RHS(RHS){};
+            BinaryOpExpr(std::string Operator, Expression* LHS, Expression* RHS):Operator(Operator), LHS(LHS), RHS(RHS){};
             ~BinaryOpExpr() {};
             llvm::Value* CodeGen(CodeGenContext& context);
     };
