@@ -1,9 +1,11 @@
-struct Complex
-{
-    float real, image;
-};
+int a = 0;
 int main()
 {
-    struct Complex x;
-    y.image = 3.5;
+    int i;
+    int c = 0,d;
+    float c =1;
+    if (c == d){
+        c = d;
+    }
+    return a;
 }

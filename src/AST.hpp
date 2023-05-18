@@ -38,6 +38,8 @@ namespace AST{
 
     class Program;
 
+   
+
     class Declaration;
         class VarDec;
             class VarInit;
@@ -45,8 +47,13 @@ namespace AST{
         class FunDec;
             class Arg;
             class ArgList;
-            class FunBody;
+            class CompStmt;
         class TypeDec;
+
+    using ExtDefList = std::vector<Declaration *>;
+
+    using VarDecList = std::vector<VarDec * >;
+    
 
     class VarType;
         class BasicType;   //INT, FLOAT
@@ -56,7 +63,8 @@ namespace AST{
             using FieldList = std::vector<std::string>;
 
     class Statement;
-        // class CompStmt;  //LC DefList StmtList RC, Statement Blocks
+        class ExpStmt;
+        class CompStmt;  //LC DefList StmtList RC, Statement Blocks
         class IfStmt;    //IF LP Exp RP Stmt
         class RetStmt;   //RETURN Exp SEMI
         // class IfElseStmt;    //IF LP Exp RP Stmt ELSE Stmt
@@ -64,6 +72,8 @@ namespace AST{
         class ForStmt;   //FOR LP Exp SEMI Exp SEMI Exp RP Stmt
 
     // class Definition;     //Def DefList
+
+    using StmtList = std::vector<Statement *>;
 
     class Expression;
         class AssignOpExpr; //Exp ASSIGNOP Exp
@@ -77,6 +87,8 @@ namespace AST{
         class IntExpr;      //INT
         class FloatExpr;    //FLOAT
         class IDExpr;       //ID
+
+        using Args = std::vector<Expression * >;
 }
 
 namespace AST {
@@ -141,9 +153,9 @@ namespace AST {
             VarType* _returnType;   //return type
             std::string _name;      //function name
             ArgList* _args;         //arguments
-            FunBody* _body;         //function body
+            CompStmt* _body;         //function body
             FunDec() : _returnType(nullptr), _args(nullptr), _body(nullptr) {}
-            FunDec(VarType* __returnType, const std::string& __name, ArgList* __args, FunBody* __body):_returnType(__returnType), _name(__name), _args(__args), _body(__body){};
+            FunDec(VarType* __returnType, const std::string& __name, ArgList* __args, CompStmt* __body):_returnType(__returnType), _name(__name), _args(__args), _body(__body){};
             ~FunDec(){};
             llvm::Value* CodeGen(CodeGenContext& context);
     };  
@@ -168,13 +180,7 @@ namespace AST {
     };
 
     //Function body
-    class FunBody : public FunDec {
-        public:
-            std::vector<Statement*>* _stmts;
-            FunBody(std::vector<Statement*>* __stmts):_stmts(__stmts){};
-            ~FunBody(){};
-            llvm::Value* CodeGen(CodeGenContext& context);
-    };
+
 
     //Type Declaration
     class TypeDec : public Declaration {
@@ -265,13 +271,21 @@ namespace AST {
             virtual llvm::Value* CodeGen(CodeGenContext& context) = 0;
     };
 
-    //Compound Statement
     class CompStmt : public Statement {
         public:
-            Statement* _stmt;
-            CompStmt(Statement* __stmt):_stmt(__stmt){};
+            std::vector<Statement*>* _stmts;
+            std::vector<VarDec*> * _varDecs;
+            CompStmt(std::vector<VarDec*> * _varDecs,std::vector<Statement*>* __stmts):_stmts(__stmts),_varDecs(_varDecs){};
             ~CompStmt(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+    };
+
+    class ExpStmt : public Statement {
+        public:
+            Expression* _exp;
+            ExpStmt(Expression* _exp):_exp(_exp){};
+            ~ExpStmt(){};
+            llvm::Value* CodeGen(CodeGenContext& context){return NULL;};
     };
 
     //If Statement
@@ -407,7 +421,16 @@ namespace AST {
             std::string name;
             StructVisitExpr(Expression* Struct, std::string name):Struct(Struct), name(name){};
             ~StructVisitExpr(){};
-            llvm::Value* CodeGen(CodeGenContext& context);
+            llvm::Value* CodeGen(CodeGenContext& context){return NULL;};
+    };
+
+    class CallFuncExpr : public Expression{
+    public:
+        std::string _name;
+        Args * _args;
+        CallFuncExpr(std::string _name,Args * _args):_name(_name),_args(_args){};
+        ~CallFuncExpr(){};
+        llvm::Value* CodeGen(CodeGenContext& context){return NULL;};
     };
     
 }

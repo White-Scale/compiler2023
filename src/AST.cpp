@@ -35,7 +35,7 @@ namespace AST{
     }
     
     //Function body
-    llvm::Value* FunBody::CodeGen(CodeGenContext& context){
+    llvm::Value* CompStmt::CodeGen(CodeGenContext& context){
         for(auto& stmt : *(this->_stmts)){
             stmt->CodeGen(context);
         }
@@ -199,10 +199,10 @@ namespace AST{
             ret = ltype->isIntegerTy() ? Builder.CreateMul(lval, rval) : Builder.CreateFSub(lval, rval);
         else if(this->Operator == "/")
             ret = ltype->isIntegerTy() ? Builder.CreateSDiv(lval, rval) : Builder.CreateFDiv(lval, rval);
-        else if(this->Operator == "&")
-            ret = Builder.CreateLogicalAnd(lval, rval);
-        else if(this->Operator == "|")
-            ret = Builder.CreateLogicalOr(lval, rval);
+        else if(this->Operator == "&"){}
+            // ret = Builder.CreateLogicalAnd(lval, rval);
+        else if(this->Operator == "|"){}
+            // ret = Builder.CreateLogicalOr(lval, rval);
         else if(this->Operator == "==")
             ret = ltype->isIntegerTy() ? Builder.CreateICmpEQ(lval, rval) : Builder.CreateFCmpOEQ(lval, rval);
         else if(this->Operator == "!=")

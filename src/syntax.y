@@ -3,7 +3,7 @@
  #include <stdio.h>
  #include <string>
  #include "lex.yy.cpp"
-
+AST::Program * p;
 
 
 //  extern void yyerror(const char *s);
@@ -12,22 +12,57 @@
 
 
 %union {
+    AST::Program * program;
+    AST::ExtDefList * extDefList;
     AST::Expression * expression;
+    AST::Declaration * declaration;
+    AST::VarDec * varDec;
+    AST::VarType * varType;
+    AST::BasicType * basicType;
+    AST::ArrayType * arrayType;
+    AST::VarDecList * varDecList;
+    AST::VarList *  varList;    
+    AST::VarInit *  varInit;
+    AST::FunDec *   funDec;
+    AST::ArgList *  argList;
+    AST::Arg *      arg;
+    AST::CompStmt * compStmt;
+    AST::StmtList * stmtList;
+    AST::Statement *     stmt;
+    AST::Args *     args;
+    AST::BasicType::TypeID typeId;
     std::string * string;
     int Int;
     float Float;
 }
 
 %type <expression> Exp;
+%type <program> Program;
+%type <extDefList> ExtDefList;
+%type <declaration> ExtDef;
+/* %type <basicType> BasicType; */
+%type <arrayType> ArrayType;
+%type <varDec> VarDec;
+%type <varType> VarType;
+%type <varDecList> VarDecList;
+%type <varList>     VarList;
+%type <varInit>     VarInit;
+%type <funDec>      FunDec;
+%type <argList>     ArgList;
+%type <arg>         Arg;
+%type <compStmt>    CompStmt;
+%type <stmtList>    StmtList;
+%type <stmt>        Stmt;
+%type <args>        Args;
 
 /* declared tokens */
-%token INT
-%token FLOAT
-%token ID
+%token <Int>INT
+%token <Float>FLOAT
+%token <string> ID
 %token PLUS MINUS STAR DIV 
 %token AND OR NOT DOT ASSIGNOP
-%token RELOP
-%token TYPE
+%token <string> RELOP
+%token <typeId> TYPE
 %token LP RP LB RB LC RC
 %token STRUCT RETURN IF ELSE WHILE
 %token SEMI COMMA
@@ -49,92 +84,82 @@
 
 %%
 /* High-level Definitions */
-Program     : ExtDefList                        {;}
+Program     : ExtDefList                        {p = new AST::Program($1);}
             ;                                   
-ExtDefList  : ExtDef ExtDefList                 {;}
-            | /* empty */                       {;}
+ExtDefList  : ExtDef ExtDefList                 {$2->push_back($1);$$ = $2;}
+            | /* empty */                       {$$ = new AST::ExtDefList();}
             ;
-ExtDef      : Specifier ExtDecList SEMI         {;}
-            | Specifier SEMI                    {;}
-            | Specifier FunDec CompSt           {;}
-            ;
-ExtDecList  : VarDec                            {;}
-            | VarDec COMMA ExtDecList           {;}
-            ;
-/* 7.1.3 Specifiers */
-Specifier   : TYPE                              {;}
-            | StructSpecifier                   {;}
+ExtDef      : VarDec                            {$$ = $1;}
+            | FunDec                            {$$ = $1;}
             ; 
-StructSpecifier : STRUCT OptTag LC DefList RC   {;}
-            | STRUCT Tag                        {;}
+/* Types*/
+VarType     : TYPE      {$$ = new AST::BasicType($1);}
+            | ArrayType {$$ = $1;}
+            /*|STructType */ 
             ;
-OptTag      : ID                                {;}
-            | /* empty */                       {;}
+ArrayType   : VarType LB INT RB {$$ = new AST::ArrayType($1,$3);}
             ;
-Tag         : ID                                {;}
+/* Declarations */                               
+VarDec      : VarType VarList SEMI              {$$ = new AST::VarDec($1,$2);}
+            ; 
+
+VarList     : VarInit COMMA VarList             {$3->push_back($1);$$ = $3;}
+            | VarInit                           {$$ = new AST::VarList();$$->push_back($1);}
             ;
-/* Declarators */                               
-VarDec      : ID                                {;}
-            | VarDec LB INT RB                  {;}
-            ;        
-FunDec      : ID LP VarList RP                  {;}
-            | ID LP RP                          {;}
+VarInit     : ID                                {$$ = new AST::VarInit(*$1,NULL);}
+            | ID ASSIGNOP Exp                   {$$ = new AST::VarInit(*$1,$3);}
+            /* Exp should be constant*/
             ;
-VarList     : ParamDec COMMA VarList            {;}
-            | ParamDec                          {;}
+
+FunDec      : VarType ID LP ArgList RP CompStmt         {$$ = new AST::FunDec($1,*$2,$4,$6);delete $2;}
+            | VarType ID LP RP CompStmt                 {$$ = new AST::FunDec($1,*$2,NULL,$5);delete $2;}
             ;
-ParamDec    : Specifier VarDec                  {;}
+ArgList     : ArgList COMMA Arg                 {$1->push_back($3);$$=$1;}
+            | Arg                               {$$ = new AST::ArgList();$$->push_back($1);}
+            ;
+Arg         : VarType ID
             ;
 /* Statements */
-CompSt      : LC DefList StmtList RC            {;}
+CompStmt    : LC VarDecList StmtList RC         {$$ = new AST::CompStmt($2,$3);}
             | /* error recovery*/ error RC      {;}
             ;
-StmtList    : Stmt StmtList                     {;}
-            | /* empty */                       {;}
+StmtList    : Stmt StmtList                     {$2->push_back($1);$$=$2;}
+            | /* empty */                       {$$=new AST::StmtList();}
             ;
-Stmt        : Exp SEMI                          {;}
-            | CompSt                            {;}
-            | RETURN Exp SEMI                   {;}
-            | IF LP Exp RP Stmt  %prec LOWER_THAN_ELSE  {;}
-            | IF LP Exp RP Stmt ELSE Stmt       {;}
-            | WHILE LP Exp RP Stmt              {;}
+VarDecList  : VarDec VarDecList                 {$2->push_back($1);$$=$2;}
+            | /* empty */                       {$$=new AST::VarDecList();}
+
+Stmt        : Exp SEMI                          {$$ = new AST::ExpStmt($1);}
+            | CompStmt                          {$$ = $1;}
+            | RETURN Exp SEMI                   {$$ = new AST::RetStmt($2) ;}
+            | IF LP Exp RP Stmt  %prec LOWER_THAN_ELSE  {$$ = new AST::IfStmt($3,$5,NULL);}
+            | IF LP Exp RP Stmt ELSE Stmt       {$$ = new AST::IfStmt($3,$5,$7);}
+            | WHILE LP Exp RP Stmt              {$$ = new AST::WhileStmt($3,$5);}
             | /* error recovery*/ error SEMI    {;}
             ;
-/*  Local Definitions */
-DefList     : Def DefList                       {;}
-            | /* empty */                       {;}
-            ;
-Def         : Specifier DecList SEMI            {;}
-            ;
-DecList     : Dec                               {;}
-            | Dec COMMA DecList                 {;}
-            ;
-Dec         : VarDec                            {;}
-            | VarDec ASSIGNOP Exp               {;}
-            ;
 /* Expressions */
-Exp         : Exp ASSIGNOP Exp                  {$$ = new AST::AssignOpExpr(NULL,NULL);}
-            | Exp AND Exp                       {;}
-            | Exp OR Exp                        {;}
-            | Exp RELOP Exp                     {;}
-            | Exp PLUS Exp                      {;}
-            | Exp MINUS Exp                     {;}
-            | Exp STAR Exp                      {;}
-            | Exp DIV Exp                       {;}
-            | LP Exp RP                         {;}
-            | MINUS Exp  %prec UMINUS           {;}
-            | NOT Exp                           {;}
-            | ID LP Args RP                     {;}
-            | ID LP RP                          {;}
-            | Exp LB Exp RB                     {;}
-            | Exp DOT ID                        {;}
-            | ID                                {;}
-            | INT                               {;}
-            | FLOAT                             {;}
+Exp         : Exp ASSIGNOP Exp                  {$$ = new AST::AssignOpExpr($1,$3);}
+            | Exp AND Exp                       {$$ = new AST::BinaryOpExpr("&",$1,$3);}
+            | Exp OR Exp                        {$$ = new AST::BinaryOpExpr("|",$1,$3);}
+            | Exp RELOP Exp                     {$$ = new AST::BinaryOpExpr(*$2,$1,$3);delete $2;}
+            | Exp PLUS Exp                      {$$ = new AST::BinaryOpExpr("+",$1,$3);}
+            | Exp MINUS Exp                     {$$ = new AST::BinaryOpExpr("-",$1,$3);}
+            | Exp STAR Exp                      {$$ = new AST::BinaryOpExpr("*",$1,$3);}
+            | Exp DIV Exp                       {$$ = new AST::BinaryOpExpr("/",$1,$3);}
+            | LP Exp RP                         {$$  =$2;}/* no sure if it is correct*/
+            | MINUS Exp  %prec UMINUS           {$$ = new AST::MinusExpr($2);}
+            | NOT Exp                           {$$ = new AST::NotExpr($2);}
+            | ID LP Args RP                     {$$ = new AST::CallFuncExpr(*$1,$3);delete $1;}
+            | ID LP RP                          {$$ = new AST::CallFuncExpr(*$1,NULL);delete $1;}
+            | Exp LB Exp RB                     {$$ = new AST::ArrayVisitExpr($1,$3);}
+            | Exp DOT ID                        {$$ = new AST::StructVisitExpr($1,*$3);} /* struct not finsh*/
+            | ID                                {$$ = new AST::IDExpr(*$1);delete $1;}
+            | INT                               {$$ = new AST::IntExpr($1);}
+            | FLOAT                             {$$ = new AST::FloatExpr($1);}
             | /* error recovery*/ error RP      {;}
             ;
-Args        : Exp COMMA Args                    {;}
-            | Exp                               {;}
+Args        : Exp COMMA Args                    {$3->push_back($1);$$=$3;}
+            | Exp                               {$$ = new AST::Args();$$->push_back($1);}
             ;
 %%
 
