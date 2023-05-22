@@ -10,6 +10,7 @@ namespace AST{
     llvm::Value* Program::CodeGen(CodeGenContext& context){
         for(auto& dec : *(this->_decs)){
             dec->CodeGen(context);
+            // dec->CodeGen(context)->print(llvm::outs());
         }
         return NULL;
     }
@@ -36,6 +37,9 @@ namespace AST{
     
     //Function body
     llvm::Value* CompStmt::CodeGen(CodeGenContext& context){
+        for(auto& var : * (this->_varDecs)){
+            var->CodeGen(context);
+        }
         for(auto& stmt : *(this->_stmts)){
             stmt->CodeGen(context);
         }
@@ -114,12 +118,14 @@ namespace AST{
         llvm::Value* cond = this->_cond->CodeGen(context);
         llvm::Function* func = context.GetCurrFunc();
         llvm::BasicBlock* thenBlock = llvm::BasicBlock::Create(context.module->getContext(), "then", func);
-        llvm::BasicBlock* elseBlock = llvm::BasicBlock::Create(context.module->getContext(), "else");
+           llvm::BasicBlock* elseBlock = llvm::BasicBlock::Create(context.module->getContext(), "else");
         llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(context.module->getContext(), "ifcont");
         context.SetInsertPoint(thenBlock);
         this->_then->CodeGen(context);
-        context.SetInsertPoint(elseBlock);
-        this->_else->CodeGen(context);
+        if(this->_else){
+            context.SetInsertPoint(elseBlock);
+            this->_else->CodeGen(context);
+        }
         context.SetInsertPoint(mergeBlock);
         return NULL;
     }

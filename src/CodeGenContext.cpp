@@ -4,7 +4,7 @@
 llvm::LLVMContext Context;
 llvm::IRBuilder<> Builder(Context);
 
-CodeGenContext::CodeGenContext() : module(new llvm::Module("main", Context)) {}
+CodeGenContext::CodeGenContext() : module(new llvm::Module("main.ll", Context)) {}
 
 llvm::TypeSize CodeGenContext::getTypeSize(llvm::Type* type){
     return module->getDataLayout().getTypeSizeInBits(type);

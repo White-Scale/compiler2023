@@ -3,6 +3,7 @@
  #include <stdio.h>
  #include <string>
  #include "lex.yy.cpp"
+ #include <algorithm>
 AST::Program * p;
 
 
@@ -84,7 +85,7 @@ AST::Program * p;
 
 %%
 /* High-level Definitions */
-Program     : ExtDefList                        {p = new AST::Program($1);}
+Program     : ExtDefList                        {reverse($1->begin(),$1->end());p = new AST::Program($1);}
             ;                                   
 ExtDefList  : ExtDef ExtDefList                 {$2->push_back($1);$$ = $2;}
             | /* empty */                       {$$ = new AST::ExtDefList();}
@@ -112,7 +113,7 @@ VarInit     : ID                                {$$ = new AST::VarInit(*$1,NULL)
             ;
 
 FunDec      : VarType ID LP ArgList RP CompStmt         {$$ = new AST::FunDec($1,*$2,$4,$6);delete $2;}
-            | VarType ID LP RP CompStmt                 {$$ = new AST::FunDec($1,*$2,NULL,$5);delete $2;}
+            | VarType ID LP RP CompStmt                 {auto emptyList = new AST::ArgList();$$ = new AST::FunDec($1,*$2,emptyList,$5);delete $2;}
             ;
 ArgList     : ArgList COMMA Arg                 {$1->push_back($3);$$=$1;}
             | Arg                               {$$ = new AST::ArgList();$$->push_back($1);}

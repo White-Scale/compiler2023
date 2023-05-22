@@ -11,4 +11,6 @@ syntax.tab.cpp: syntax.y lex.yy.cpp
 	bison  -v -d syntax.y -o syntax.tab.cpp
 parser: main.cpp syntax.tab.cpp 
 # $(CC) main.cpp syntax.tab.cpp lex.yy.cpp -lfl -ly -o parser
-	$(CC) `llvm-config --libs core mcjit native --cxxflags --ldflags` main.cpp syntax.tab.cpp AST.cpp CodeGenContext.cpp -lfl -ly -L/usr/lib/llvm-10/lib -lLLVM-10 -g -o parser
+	$(CC) `llvm-config --libs core mcjit native --cxxflags --ldflags` \
+	 main.cpp syntax.tab.cpp AST.cpp CodeGenContext.cpp -lfl -ly   \
+	 `llvm-config --libs core mcjit native --cxxflags --ldflags` -g -o parser
