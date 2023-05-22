@@ -52,7 +52,7 @@ llvm::Value* CodeGenContext::getSymbolTableEntry(const std::string& name) {
 }
 
 llvm::AllocaInst* CodeGenContext::createEntryBlockAlloca(llvm::Type* type, const std::string& name) {
-    llvm::Function* function = builder().GetInsertBlock()->getParent();
+    llvm::Function* function = _builder.GetInsertBlock()->getParent();
     llvm::IRBuilder<> tmpBuilder(&function->getEntryBlock(), function->getEntryBlock().begin());
     return tmpBuilder.CreateAlloca(type, 0, name);
 }

@@ -58,6 +58,7 @@ namespace AST{
     llvm::Value* VarDec::CodeGen(CodeGenContext& context){
         if(_VarList != NULL){
             for(auto& var : *(_VarList)){
+                var->_VarType = this->_VarType;
                 var->CodeGen(context);  //Generate code for each var
             }
         }
@@ -204,7 +205,7 @@ namespace AST{
             return NULL;
         }
         //convert condition to bool
-        condValue = context.builder().CreateFCmpONE(condValue, llvm::ConstantInt::get(context.getLLVMContext(), llvm::APInt(32, 0)), "ifcond");
+        condValue = context.builder().CreateICmpNE(condValue, llvm::ConstantInt::get(context.getLLVMContext(), llvm::APInt(32, 0)), "ifcond");
         //get current function
         llvm::Function* func = context.builder().GetInsertBlock()->getParent();
         //create blocks for then and else
@@ -252,7 +253,9 @@ namespace AST{
     llvm::Value* RetStmt::CodeGen(CodeGenContext& context){
         if (_retval) {
             //generate code for return value
+            // context._is_save = true;
             llvm::Value* retVal = this->_retval->CodeGen(context);
+            // context._is_save = false;
             if (!retVal) {
                 //Invalid return value
                 std::cerr << "Invalid return value" << std::endl;
@@ -468,6 +471,10 @@ namespace AST{
         if (!variable) {
             std::cerr << "Error: Variable " << name << " not declared" << std::endl;
             return NULL;
+        }
+        if(!context._is_save){
+            llvm::Value * load = context.builder().CreateLoad(variable);
+            return load;
         }
         return variable;
     }

@@ -6,6 +6,7 @@
 
 class CodeGenContext {
 public:
+    bool _is_save;
     llvm::LLVMContext _llvmContext;
     llvm::Module* _module;
     llvm::IRBuilder<>& _builder;

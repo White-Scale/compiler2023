@@ -1,11 +1,23 @@
-int a = 0;
-int main()
-{
-    int i =0;
-    int c = 0,d =1;
-    float e =1;
-    if (c == d){
-        c = d;
-    }
-    return a;
+source_filename = "main"
+
+define i32 @main() {
+entry:
+  %i = alloca i32
+  %arr = alloca [4 x [5 x i32]]
+  %c = alloca i32
+  %d = alloca i32
+  %e = alloca float
+  store float 2.000000e+00, float* %e
+  store i32 1, i32* %d
+  store i32 0, i32* %c
+  store i32 0, i32* %i
+  %0 = load i32, i32* %c
+  ret i32 %0
+}
+
+define float @f(i32 %a) {
+entry:
+  %a1 = alloca i32
+  store i32 %a, i32* %a1
+  ret float 1.000000e+00
 }

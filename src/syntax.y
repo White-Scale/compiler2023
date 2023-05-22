@@ -118,10 +118,10 @@ FunDec      : VarType ID LP ArgList RP CompStmt         {$$ = new AST::FunDec($1
 ArgList     : ArgList COMMA Arg                 {$1->push_back($3);$$=$1;}
             | Arg                               {$$ = new AST::ArgList();$$->push_back($1);}
             ;
-Arg         : VarType ID
+Arg         : VarType ID                        {$$= new AST::Arg($1,*$2);delete $2;}
             ;
 /* Statements */
-CompStmt    : LC VarDecList StmtList RC         {$$ = new AST::CompStmt($2,$3);}
+CompStmt    : LC VarDecList StmtList RC         {reverse($3->begin(),$3->end());$$ = new AST::CompStmt($2,$3);}
             | /* error recovery*/ error RC      {;}
             ;
 StmtList    : Stmt StmtList                     {$2->push_back($1);$$=$2;}

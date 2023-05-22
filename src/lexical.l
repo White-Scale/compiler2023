@@ -25,7 +25,7 @@ ID [a-zA-Z][a-zA-Z_0-9]*
 "||" {return OR;}
 "." {return DOT;}
 "!" {return NOT;}
-"int"|"float"  {if(strcmp(yytext,"int"))yylval.typeId=AST::BasicType::TypeID::_int;
+"int"|"float"  {if(strcmp(yytext,"int")==0)yylval.typeId=AST::BasicType::TypeID::_int;
                 else yylval.typeId=AST::BasicType::TypeID::_float; 
                 return TYPE;}
 "(" {return LP;}
