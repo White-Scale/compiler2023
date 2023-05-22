@@ -271,7 +271,7 @@ namespace AST {
             Expression* _exp;
             ExpStmt(Expression* _exp):_exp(_exp){};
             ~ExpStmt(){};
-            llvm::Value* CodeGen(CodeGenContext& context){return NULL;};
+            llvm::Value* CodeGen(CodeGenContext& context);
     };
 
     //If Statement

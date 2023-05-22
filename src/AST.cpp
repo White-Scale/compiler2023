@@ -183,11 +183,11 @@ namespace AST{
         if(_stmts != NULL){
             for(Statement* stmt : *_stmts){
                 lastValue = stmt->CodeGen(context);
-                if (!lastValue) {
-                    //Invalid statement
-                    std::cerr << "Invalid statement" << std::endl;
-                    return NULL;
-                }
+                // if (!lastValue) {
+                //     //Invalid statement
+                //     std::cerr << "Invalid statement" << std::endl;
+                //     return NULL;
+                // }
             }
         }
         //pop the symbol table
@@ -195,6 +195,11 @@ namespace AST{
         return lastValue;
     }
 
+
+    llvm::Value* ExpStmt::CodeGen(CodeGenContext& context){
+        _exp->CodeGen(context);
+        return NULL;
+    }
 
     //If Statement
     llvm::Value* IfStmt::CodeGen(CodeGenContext& context){
@@ -349,12 +354,16 @@ namespace AST{
     //Exp ASSIGNOP Exp
     llvm::Value* AssignOpExpr::CodeGen(CodeGenContext& context){
         //generate code for left and right-hand side
+        context._is_save = true;
         llvm::Value* lval = LHS->CodeGen(context);
+        context._is_save = false;
         llvm::Value* rval = RHS->CodeGen(context);
         //get type of left-hand side
         llvm::Type* lType = lval->getType();
         //convert right-hand side to left-hand side type
-        rval = context.builder().CreateIntCast(rval, lType, true);
+
+        // rval = context.builder().CreateIntCast(rval, lType, true);
+        
         //store right-hand side to into left-hand side
         context.builder().CreateStore(rval, lval);
         return rval;
