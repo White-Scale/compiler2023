@@ -64,10 +64,8 @@ unsigned int CodeGenContext::getStructMemberIndex(llvm::StructType* structType, 
         if (memberNameRef == memberName) {
             return i;   //return index of the member
         }
-
-        //if not found, return -1
-        return -1;
     }
+    return -1;  //return -1 if member not found
 }
 
 void CodeGenContext::AddFunc(const std::string& functionName, llvm::Function* function) {

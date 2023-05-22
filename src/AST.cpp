@@ -22,7 +22,7 @@ namespace AST{
         //get function type
         llvm::FunctionType* funcType = llvm::FunctionType::get(this->_returnType->GetType(context), argTypes, false);
         //create function
-        llvm::Function* func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, this->_name, context.module());
+        llvm::Function* func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, this->_name, context.getModule());
         context.AddFunc(this->_name, func);
         llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "entry", func);
         context.builder().SetInsertPoint(entryBlock);
@@ -43,10 +43,11 @@ namespace AST{
             if(_returnType->GetType(context) == llvm::Type::getVoidTy(context.getLLVMContext())){
                 //return void
                 context.builder().CreateRetVoid();
-        } else {
-            //return default value based on return type
-            llvm::Value* defaultValue = llvm::UndefValue::get(_returnType->GetType(context));
-            context.builder().CreateRet(defaultValue);
+            } else {
+                //return default value based on return type
+                llvm::Value* defaultValue = llvm::UndefValue::get(_returnType->GetType(context));
+                context.builder().CreateRet(defaultValue);
+            }
         }
         return func;
     }
@@ -107,13 +108,9 @@ namespace AST{
             std::cerr << "Invalid element type" << std::endl;
             return NULL;
         }
-        //get array dimension
-        std::vector<unsigned int> dimensions;
-        for(int dimesion : _dimensions){
-            dimensions.push_back(static_cast<unsigned int>(dimesion));
-        }
         //create array type
-        return llvm::ArrayType::get(elementType, dimensions);
+        llvm::Type* arrayType = llvm::ArrayType::get(elementType, this->_size);
+        return arrayType;
     }
 
     //Struct Type
@@ -434,15 +431,11 @@ namespace AST{
     llvm::Value* ArrayVisitExpr::CodeGen(CodeGenContext& context){
         //generate code for array and index
         llvm::Value* array = Array->CodeGen(context);
-        std::vector<llvm::Value*> indices;
-        for(Expression* indexExpr : Indices){
-            llvm::Value* index = indexExpr->CodeGen(context);
-            //change index to 32 bit integer
-            index = context.builder().CreateIntCast(index, llvm::Type::getInt32Ty(context.getLLVMContext()), true);
-            indices.push_back(index);
-        }
+        llvm::Value* index = Index->CodeGen(context);
+        //convert index to integer
+        index = context.builder().CreateIntCast(index, llvm::Type::getInt32Ty(context.getLLVMContext()), true);
         //calculate address of element
-        llvm::Value* addr = context.builder().CreateGEP(array, indices, "arraytmp");
+        llvm::Value* addr = context.builder().CreateGEP(array, index, "arraytmp");
         //load element
         return context.builder().CreateLoad(addr, "arrayloadtmp");
     }
@@ -461,7 +454,8 @@ namespace AST{
         //create LLVM float type
         llvm::Type* floatType = llvm::Type::getFloatTy(context.getLLVMContext());
         //create float constant
-        llvm::Value* floatConst = llvm::ConstantFP::get(floatType, this->value, true);
+        double val = static_cast<double>(this->value);
+        llvm::Value* floatConst = llvm::ConstantFP::get(floatType, val);
         return floatConst;
     }
 

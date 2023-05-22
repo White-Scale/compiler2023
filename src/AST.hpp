@@ -219,10 +219,9 @@ namespace AST {
     class ArrayType : public VarType {
         public:
             VarType* _type;
-            std::vector<int> _dimensions;   //array dimensions
-            ArrayType(VarType* __type, std::vector<int> __dimensions) : _type(__type), _dimensions(__dimensions) {}
-            ArrayType(VarType* __type) : _type(__type) {}   //one dimension array
-            ~ArrayType(){}
+            int _size;
+            ArrayType(VarType* __type, int __size):_type(__type), _size(__size){};
+            ~ArrayType(){};
             llvm::Type* GetType(CodeGenContext& context);
     };
 
@@ -368,9 +367,8 @@ namespace AST {
     class ArrayVisitExpr : public Expression{
         public:
             Expression* Array;
-            std::vector<Expression*> Indices;
-            std::vector<int> _dimensions;   //support multi-dimension array
-            ArrayVisitExpr(Expression* Array, std::vector<Expression*> Indices) : Array(Array), Indices(Indices) {}
+            Expression* Index;
+            ArrayVisitExpr(Expression* Array, Expression* Index):Array(Array), Index(Index){};
             ~ArrayVisitExpr(){};
             llvm::Value* CodeGen(CodeGenContext& context);
     };
