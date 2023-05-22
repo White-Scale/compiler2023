@@ -25,6 +25,6 @@ int main(int argc, char **argv)
     ::yyparse();
     CodeGenContext cgc;
     p->CodeGen(cgc);
-    cgc.module->print(llvm::outs(),nullptr);
+    cgc._module->print(llvm::outs(),nullptr);
     return 0;
 }

@@ -1,30 +1,33 @@
 #pragma once
 #include "AST.hpp"
-
-extern llvm::LLVMContext Context;
-extern llvm::IRBuilder<> Builder;
+#include <unordered_map>
+#include <vector>
+#include <string>
 
 class CodeGenContext {
-    public:
-        llvm::Module* module;
-        CodeGenContext();
-        llvm::TypeSize getTypeSize(llvm::Type* type);
-        void AddFunc(std::string name, llvm::Function* Func);
-        llvm::Function* GetFunc(std::string name);
-        void EnterFunc(llvm::Function* Func);
-        void ExitFunc();
-        llvm::Function* GetCurrFunc();
-        void SetInsertPoint(llvm::BasicBlock* bBlock);
-        llvm::BasicBlock* GetInsertPoint();
-        llvm::AllocaInst* CreateEntryBlockAlloca(llvm::Function* function, std::string varName);
-        llvm::Value* GetVariable(std::string name);
-        void AddVar(std::string name, llvm::Value* val);
-        void GenerateIR(AST::Program& ast);
-        ~CodeGenContext();
-        // ~CodeGenContext() = default;
-    private:
-        llvm::Function* CurrFunc;
-        llvm::BasicBlock* InsertPoint;
-        std::map<std::string, llvm::Value*> Variables;
-        std::map<std::string, llvm::Function*> Funcs;
+public:
+    llvm::LLVMContext _llvmContext;
+    llvm::Module* _module;
+    llvm::IRBuilder<>& _builder;
+    std::unordered_map<std::string, llvm::Value*> _symbolTable;
+    std::vector<std::unordered_map<std::string, llvm::Value*>> _symbolTableStack;
+    std::unordered_map<std::string, llvm::Function*> _functionTable;
+
+public:
+    CodeGenContext();
+
+    llvm::LLVMContext& getLLVMContext();
+    llvm::Module* getModule();
+    llvm::IRBuilder<>& builder();
+
+    void pushSymbolTable();
+    void popSymbolTable();
+    bool isGlobalScope();
+    void createSymbolTableEntry(const std::string& name, llvm::Value* value);
+    void createSymbolTableEntry(const std::string& name, llvm::Type* type);
+    llvm::Value* getSymbolTableEntry(const std::string& name);
+    llvm::AllocaInst* createEntryBlockAlloca(llvm::Type* type, const std::string& name);
+    unsigned int getStructMemberIndex(llvm::StructType* structType, const std::string& memberName);
+    void AddFunc(const std::string& functionName, llvm::Function* function);
+    llvm::Function* getFunction(const std::string& name);
 };
