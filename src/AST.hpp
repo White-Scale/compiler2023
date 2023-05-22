@@ -140,14 +140,13 @@ namespace AST {
             Expression* _value;      // possible value
             VarInit(const std::string& __name, Expression* __value):_name(__name), _value(__value){}
             ~VarInit(){}
-            llvm::Value* CodeGen(CodeGenContext& context) {return nullptr;}
+            llvm::Value* CodeGen(CodeGenContext& context);
     };
 
     //Function Declaration
-    //FunDec -> VarType FunName LP ArgList RP LC FunBody RC
-    //FunDec -> VarType FunName LP RP LC FunBody RC
+    //FunDec -> VarType FunName LP ArgList RP CompStmt
     //ArgList -> ArgList COMMA Arg | Arg
-    //FunBody -> StmtList
+    //Arg -> VarType VarName
     class FunDec : public Declaration {
         public:
             VarType* _returnType;   //return type
@@ -200,9 +199,6 @@ namespace AST {
             ~VarType(){}
             virtual llvm::Type* GetType(CodeGenContext& context) = 0;
             virtual llvm::Value* CodeGen(CodeGenContext& context) {return nullptr;}
-            virtual bool isBasicType() = 0;
-            virtual bool isArrayType() = 0;
-            virtual bool isStructType() = 0;
     };
 
     //Basic Type
@@ -212,30 +208,22 @@ namespace AST {
                 _int,
                 _float,
                 _char,
-                _void,
-                _bool
             };
             TypeID _type;
             BasicType(TypeID __type):_type(__type){};
             ~BasicType(){};
             llvm::Type* GetType(CodeGenContext& context);
-            bool isBasicType() {return true;}
-            bool isArrayType() {return false;}
-            bool isStructType() {return false;}
     };
 
     //Array Type
     class ArrayType : public VarType {
         public:
             VarType* _type;
-            int _size;
-            ArrayType(VarType* __type, int __size):_type(__type), _size(__size){};
-            ArrayType(VarType* __type):_type(__type), _size(0){};     //not initialized
-            ~ArrayType(){};
+            std::vector<int> _dimensions;   //array dimensions
+            ArrayType(VarType* __type, std::vector<int> __dimensions) : _type(__type), _dimensions(__dimensions) {}
+            ArrayType(VarType* __type) : _type(__type) {}   //one dimension array
+            ~ArrayType(){}
             llvm::Type* GetType(CodeGenContext& context);
-            bool isBasicType() {return false;}
-            bool isArrayType() {return true;}
-            bool isStructType() {return false;}
     };
 
     //Struct Type
@@ -248,9 +236,6 @@ namespace AST {
             llvm::Type* GetType(CodeGenContext& context);
             llvm::Type* GenerateStruct(CodeGenContext& context, std::string name="<unnamed>");  //generate empty struct
             llvm::Type* GenerateBody(CodeGenContext& context);
-            bool isBasicType() {return false;}
-            bool isArrayType() {return false;}
-            bool isStructType() {return true;}
     };
 
     //Field declaration in struct
@@ -271,6 +256,7 @@ namespace AST {
             virtual llvm::Value* CodeGen(CodeGenContext& context) = 0;
     };
 
+    //Compound Statement
     class CompStmt : public Statement {
         public:
             std::vector<Statement*>* _stmts;
@@ -280,6 +266,7 @@ namespace AST {
             llvm::Value* CodeGen(CodeGenContext& context);
     };
 
+    //Expression Statement
     class ExpStmt : public Statement {
         public:
             Expression* _exp;
@@ -341,10 +328,10 @@ namespace AST {
     //Exp ASSIGN Exp
     class AssignOpExpr : public Expression {
         public:
+            std::string identifier; //identifier
             Expression* LHS;
             Expression* RHS;
             AssignOpExpr(Expression* LHS, Expression* RHS):LHS(LHS), RHS(RHS){};
-            ~AssignOpExpr(){};
             llvm::Value* CodeGen(CodeGenContext& context);
     };
 
@@ -377,12 +364,13 @@ namespace AST {
             llvm::Value* CodeGen(CodeGenContext& context);
     };
 
-    //Exp [ Exp ]
+    //Exp LB Exp RB
     class ArrayVisitExpr : public Expression{
         public:
             Expression* Array;
-            Expression* Index;
-            ArrayVisitExpr(Expression* Array, Expression* Index):Array(Array), Index(Index){};
+            std::vector<Expression*> Indices;
+            std::vector<int> _dimensions;   //support multi-dimension array
+            ArrayVisitExpr(Expression* Array, std::vector<Expression*> Indices) : Array(Array), Indices(Indices) {}
             ~ArrayVisitExpr(){};
             llvm::Value* CodeGen(CodeGenContext& context);
     };
@@ -421,16 +409,17 @@ namespace AST {
             std::string name;
             StructVisitExpr(Expression* Struct, std::string name):Struct(Struct), name(name){};
             ~StructVisitExpr(){};
-            llvm::Value* CodeGen(CodeGenContext& context){return NULL;};
+            llvm::Value* CodeGen(CodeGenContext& context);
     };
 
+    //ID LP Args RP, ID LP RP
     class CallFuncExpr : public Expression{
     public:
         std::string _name;
         Args * _args;
         CallFuncExpr(std::string _name,Args * _args):_name(_name),_args(_args){};
         ~CallFuncExpr(){};
-        llvm::Value* CodeGen(CodeGenContext& context){return NULL;};
+        llvm::Value* CodeGen(CodeGenContext& context);
     };
     
 }
