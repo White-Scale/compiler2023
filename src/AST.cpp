@@ -285,8 +285,8 @@ namespace AST{
         //create blocks for condition, body and merge
         llvm::Function* func = context.builder().GetInsertBlock()->getParent();
         llvm::BasicBlock* condBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "whilecond", func);
-        llvm::BasicBlock* bodyBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "whilebody");
-        llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "whilecont");
+        llvm::BasicBlock* bodyBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "whilebody",func);
+        llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "whilecont",func);
         //jump to condition block
         context.builder().CreateBr(condBlock);
         //generate code for loop condition
@@ -299,6 +299,7 @@ namespace AST{
         }
         //jump to body when condition is true
         context.builder().CreateCondBr(condValue, bodyBlock, mergeBlock);
+        context.builder().SetInsertPoint(bodyBlock);
         this->_body->CodeGen(context);
         //jump back to condition block
         context.builder().CreateBr(condBlock);

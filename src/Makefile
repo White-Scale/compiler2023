@@ -14,3 +14,8 @@ parser: main.cpp syntax.tab.cpp
 	$(CC) `llvm-config --libs core mcjit native --cxxflags --ldflags` \
 	 main.cpp syntax.tab.cpp AST.cpp CodeGenContext.cpp -lfl -ly   \
 	 `llvm-config --libs core mcjit native --cxxflags --ldflags` -g -o parser
+
+test:
+	./parser ../test/1.cmm > ../test/1.ll
+	llvm-as ../test/1.ll -o ../test/1.bc
+	clang ../test/1.bc -o 11.out
