@@ -18,4 +18,4 @@ parser: main.cpp syntax.tab.cpp
 test:
 	./parser ../test/1.cmm > ../test/1.ll
 	llvm-as ../test/1.ll -o ../test/1.bc
-	clang ../test/1.bc -o 11.out
+	clang ../test/1.bc -o 11.out 

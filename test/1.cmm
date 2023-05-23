@@ -8,6 +8,7 @@ int main()
     int a = 0;
     float b = 1.0;
     char c = 72;
+    char[5][4] arr;
     putchar(c);
     c = 101;
     putchar(c);
@@ -18,6 +19,8 @@ int main()
     putchar(c);
     c = 10;
     putchar(c);
+    arr[1][1] = 101;
+    putchar(arr[1][1]);
     a = c;
     a = 1;
     a = 2.0;

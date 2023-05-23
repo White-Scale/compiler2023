@@ -42,7 +42,7 @@ namespace AST{
             //Generate code for function body
             this->_body->CodeGen(context);
             //add return statement if not exist
-            if(!entryBlock->getTerminator()) {
+            if(!context.builder().GetInsertBlock()->getTerminator()) {
                 if(_returnType->GetType(context) == llvm::Type::getVoidTy(context.getLLVMContext())){
                     //return void
                     context.builder().CreateRetVoid();
