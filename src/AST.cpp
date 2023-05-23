@@ -496,16 +496,35 @@ namespace AST{
     }
 
     //Exp LB Exp RB
-    llvm::Value* ArrayVisitExpr::CodeGen(CodeGenContext& context){
+llvm::Value* ArrayVisitExpr::CodeGen(CodeGenContext& context){
         //generate code for array and index
+        bool contextSave = context._is_save;
+        context._is_save = true;
         llvm::Value* array = Array->CodeGen(context);
+        context._is_save = false;
         llvm::Value* index = Index->CodeGen(context);
+
         //convert index to integer
+        auto zero = context.builder().getInt32(0);
         index = context.builder().CreateIntCast(index, llvm::Type::getInt32Ty(context.getLLVMContext()), true);
         //calculate address of element
-        llvm::Value* addr = context.builder().CreateGEP(array, index, "arraytmp");
+        llvm::Value* addr;
+        if(array->getType()->getPointerElementType()->isArrayTy()){
+            addr = context.builder().CreateGEP(array, {zero,index}, "arraytmp");
+        }else{
+            addr = context.builder().CreateGEP(array ,index, "arraytmp");
+        }
+
+        // llvm::Value* addr = context.builder().CreateExtractValue(index,array);
         //load element
-        return context.builder().CreateLoad(addr, "arrayloadtmp");
+        context._is_save = contextSave;
+        llvm::Value* ret;
+        if(contextSave){
+            ret = addr;
+        }else{
+            ret = context.builder().CreateLoad(addr, "arrayloadtmp");
+        }
+        return ret;
     }
 
     //INT
