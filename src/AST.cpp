@@ -23,31 +23,34 @@ namespace AST{
         //get function type
         llvm::FunctionType* funcType = llvm::FunctionType::get(this->_returnType->GetType(context), argTypes, false);
         //create function
+        // llvm::Function::create
         llvm::Function* func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, this->_name, context.getModule());
         context.AddFunc(this->_name, func);
-        llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "entry", func);
-        context.builder().SetInsertPoint(entryBlock);
-        //Create a new symbol table for this function
-        unsigned int index = 0;
-        for(llvm::Argument& argument : func->args()){
-            Arg* arg = (*_args)[index];
-            argument.setName(arg->_name);
-            llvm::AllocaInst* alloca = context.createEntryBlockAlloca(arg->_type->GetType(context), arg->_name);
-            context.builder().CreateStore(&argument, alloca);
-            context.createSymbolTableEntry(arg->_name, alloca);
-            index++;
-        }
-        //Generate code for function body
-        this->_body->CodeGen(context);
-        //add return statement if not exist
-        if(!entryBlock->getTerminator()) {
-            if(_returnType->GetType(context) == llvm::Type::getVoidTy(context.getLLVMContext())){
-                //return void
-                context.builder().CreateRetVoid();
-            } else {
-                //return default value based on return type
-                llvm::Value* defaultValue = llvm::UndefValue::get(_returnType->GetType(context));
-                context.builder().CreateRet(defaultValue);
+        if(_body!=NULL){
+            llvm::BasicBlock* entryBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "entry", func);
+            context.builder().SetInsertPoint(entryBlock);
+            //Create a new symbol table for this function
+            unsigned int index = 0;
+            for(llvm::Argument& argument : func->args()){
+                Arg* arg = (*_args)[index];
+                argument.setName(arg->_name);
+                llvm::AllocaInst* alloca = context.createEntryBlockAlloca(arg->_type->GetType(context), arg->_name);
+                context.builder().CreateStore(&argument, alloca);
+                context.createSymbolTableEntry(arg->_name, alloca);
+                index++;
+            }
+            //Generate code for function body
+            this->_body->CodeGen(context);
+            //add return statement if not exist
+            if(!entryBlock->getTerminator()) {
+                if(_returnType->GetType(context) == llvm::Type::getVoidTy(context.getLLVMContext())){
+                    //return void
+                    context.builder().CreateRetVoid();
+                } else {
+                    //return default value based on return type
+                    llvm::Value* defaultValue = llvm::UndefValue::get(_returnType->GetType(context));
+                    context.builder().CreateRet(defaultValue);
+                }
             }
         }
         return func;
