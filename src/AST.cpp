@@ -242,11 +242,11 @@ namespace AST{
         llvm::Value* elseValue = NULL;
         if (_else) {
             elseValue = _else->CodeGen(context);
-            if (!elseValue) {
-                //Invalid else
-                std::cerr << "Invalid else" << std::endl;
-                return NULL;
-            }
+            // if (!elseValue) {
+            //     //Invalid else
+            //     std::cerr << "Invalid else" << std::endl;
+            //     return NULL;
+            // }
         }
         context.builder().CreateBr(mergeBlock);
         elseBlock = context.builder().GetInsertBlock(); //update else block for phi node
