@@ -74,6 +74,9 @@ namespace AST{
         llvm::AllocaInst* alloca = context.createEntryBlockAlloca(_VarType->GetType(context), _name);
         context.createSymbolTableEntry(_name, alloca);
         if(initVal != NULL){
+            if(initVal->getType() != _VarType->GetType(context)){
+                initVal = context.builder().CreateIntCast(initVal, _VarType->GetType(context) , true);
+            }
             context.builder().CreateStore(initVal, alloca);
         }
         return NULL;
@@ -364,12 +367,20 @@ namespace AST{
         llvm::Value* lval = LHS->CodeGen(context);
         context._is_save = false;
         llvm::Value* rval = RHS->CodeGen(context);
+        llvm::Type* pointedType;
         //get type of left-hand side
-        llvm::Type* lType = lval->getType();
+        if (llvm::PointerType* pointerType = llvm::dyn_cast<llvm::PointerType>(lval->getType())) {
+            pointedType = pointerType->getElementType(); // 获取指针所指的类型
+            
+        }   
         //convert right-hand side to left-hand side type
 
-        // rval = context.builder().CreateIntCast(rval, lType, true);
+        if(pointedType!=rval->getType()){
+            rval = context.builder().CreateIntCast(rval, pointedType , true);
+        }
         
+        // rval =  context.builder().CreateTruncOrBitCast(rval, lType);
+
         //store right-hand side to into left-hand side
         context.builder().CreateStore(rval, lval);
         return rval;

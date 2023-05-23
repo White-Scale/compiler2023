@@ -10,6 +10,8 @@ letter [a-zA-Z]
 INT [0-9]+
 FLOAT [+−]?[0-9]*"."[0-9]+
 ID [a-zA-Z][a-zA-Z_0-9]*
+/*STRING "\"" */
+
 
 
 %%
@@ -25,8 +27,9 @@ ID [a-zA-Z][a-zA-Z_0-9]*
 "||" {return OR;}
 "." {return DOT;}
 "!" {return NOT;}
-"int"|"float"  {if(strcmp(yytext,"int")==0)yylval.typeId=AST::BasicType::TypeID::_int;
-                else yylval.typeId=AST::BasicType::TypeID::_float; 
+"int"|"float"|"char"  {if(strcmp(yytext,"int")==0)yylval.typeId=AST::BasicType::TypeID::_int;
+                else if (strcmp(yytext,"float")==0)yylval.typeId=AST::BasicType::TypeID::_float;
+                else yylval.typeId=AST::BasicType::TypeID::_char;
                 return TYPE;}
 "(" {return LP;}
 ")" {return RP;}
