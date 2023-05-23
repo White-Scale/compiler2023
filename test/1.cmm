@@ -1,26 +1,17 @@
-int putchar (char a);
-int f(int a){
-    if(a==0) return 1;
-    else return a*f(a-1);
+int f(int x, int[] y) {
+    int s=2;
+    float t=3.5;
+    y[1] = s+t;
+    return 1;
 }
+
 int main()
 {   
-    int a = 0;
-    float b = 1.0;
-    char c = 72;
-    putchar(c);
-    c = 101;
-    putchar(c);
-    c = 108;
-    putchar(c);
-    putchar(c);
-    c = 111;
-    putchar(c);
-    c = 10;
-    putchar(c);
-    a = c;
-    a = 1;
-    a = 2.0;
-    a = c;
+    int a = 1;
+    int[3] c;
+    c[1] = 2;
+    c[0] = 3;
+    c[2] = 5;
+    f(a,c);
     return 0;
 }

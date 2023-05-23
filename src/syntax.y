@@ -99,6 +99,7 @@ VarType     : TYPE      {$$ = new AST::BasicType($1);}
             /*|STructType */ 
             ;
 ArrayType   : VarType LB INT RB {$$ = new AST::ArrayType($1,$3);}
+            | VarType LB RB       {$$ = new AST::ArrayType($1,0);}  //allow empty size for function parameter
             ;
 /* Declarations */                               
 VarDec      : VarType VarList SEMI              {$$ = new AST::VarDec($1,$2);}

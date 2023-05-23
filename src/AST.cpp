@@ -17,7 +17,23 @@ namespace AST{
         //argument type list
         if(_args != NULL){
             for(auto arg : *(this->_args)){
-                argTypes.push_back(arg->_type->GetType(context));
+                llvm::Type* argType = arg->_type->GetType(context);
+                //handle array type
+                if(ArrayType* arrayType = dynamic_cast<ArrayType*>(arg->_type)){
+                    if (arrayType->_size == 0) {
+                        //if empty array, pass a pointer
+                        llvm::Type* elementType = arrayType->_type->GetType(context);
+                        llvm::PointerType* pointerType = llvm::PointerType::get(elementType, 0);
+                        argTypes.push_back(pointerType);
+                    } else {
+                        //if not empty array, pass the array type
+                        argTypes.push_back(argType);
+                    }
+                } else {
+                    //if not array, pass the type
+                    llvm::Type* argType = arg->_type->GetType(context);
+                    argTypes.push_back(argType);
+                }
             }
         }
         //get function type
@@ -118,8 +134,12 @@ namespace AST{
             return NULL;
         }
         //create array type
-        llvm::Type* arrayType = llvm::ArrayType::get(elementType, this->_size);
-        return arrayType;
+        if (this->_size == 0) {
+            //create pointer type
+            return llvm::PointerType::get(elementType, 0);
+        }
+        //create array type
+        return llvm::ArrayType::get(elementType, this->_size);
     }
 
     //Struct Type
@@ -244,8 +264,8 @@ namespace AST{
             elseValue = _else->CodeGen(context);
             if (!elseValue) {
                 //Invalid else
-                std::cerr << "Invalid else" << std::endl;
-                return NULL;
+                // std::cerr << "Invalid else" << std::endl;
+                // return NULL;
             }
         }
         context.builder().CreateBr(mergeBlock);
@@ -370,20 +390,17 @@ namespace AST{
         llvm::Value* lval = LHS->CodeGen(context);
         context._is_save = false;
         llvm::Value* rval = RHS->CodeGen(context);
-        llvm::Type* pointedType;
-        //get type of left-hand side
-        if (llvm::PointerType* pointerType = llvm::dyn_cast<llvm::PointerType>(lval->getType())) {
-            pointedType = pointerType->getElementType(); // 获取指针所指的类型
-            
-        }   
-        //convert right-hand side to left-hand side type
-
-        if(pointedType!=rval->getType()){
-            rval = context.builder().CreateIntCast(rval, pointedType , true);
+        //type cast
+        llvm::Type* ltype = lval->getType();
+        if(lval->getType()->getTypeID() == llvm::Type::PointerTyID) {
+            ltype = ltype->getPointerElementType();
+        } else if (lval->getType()->getTypeID() == llvm::Type::ArrayTyID) {
+            ltype = ltype->getArrayElementType();
         }
-        
-        // rval =  context.builder().CreateTruncOrBitCast(rval, lType);
-
+        llvm::Type* rtype = rval->getType();
+        if (rtype != ltype) {
+            rval = context.builder().CreateIntCast(rval, ltype, true);
+        }
         //store right-hand side to into left-hand side
         context.builder().CreateStore(rval, lval);
         return rval;
@@ -394,19 +411,19 @@ namespace AST{
         //generate code for left and right-hand side
         llvm::Value* lval = this->LHS->CodeGen(context);
         llvm::Value* rval = this->RHS->CodeGen(context);
-        //perform type checking
+        //type cast
         llvm::Type* ltype = lval->getType();
+        if(lval->getType()->getTypeID() == llvm::Type::PointerTyID) {
+            ltype = ltype->getPointerElementType();
+        } else if (lval->getType()->getTypeID() == llvm::Type::ArrayTyID) {
+            ltype = ltype->getArrayElementType();
+        }
         llvm::Type* rtype = rval->getType();
-        if (ltype != rtype) {
-            //if type mismatch, convert right-hand side to left-hand side type
-            if (ltype ->isIntegerTy() && rtype->isIntegerTy()) {
-                rval = context.builder().CreateIntCast(rval, ltype, true);
-            } else if (ltype->isFloatingPointTy() && rtype->isFloatingPointTy()) {
-                rval = context.builder().CreateFPCast(rval, ltype);
-            } else {
-                //Invalid type
-                std::cerr << "Invalid type" << std::endl;
-                return NULL;
+        if (rtype != ltype) {
+            if (ltype->isIntegerTy() && rtype->isFloatTy()) {
+                lval = context.builder().CreateSIToFP(lval, rtype);
+            } else if (ltype->isFloatTy() && rtype->isIntegerTy()) {
+                rval = context.builder().CreateSIToFP(rval, ltype);
             }
         }
         llvm::Value* ret = NULL;
@@ -416,31 +433,48 @@ namespace AST{
         } else if (Operator == "-") {
             ret =  context.builder().CreateSub(lval, rval, "subtmp");
         } else if (Operator == "*") {
-            return context.builder().CreateMul(lval, rval, "multmp");
+            ret = context.builder().CreateMul(lval, rval, "multmp");
         } else if (Operator == "/") {
-            return context.builder().CreateSDiv(lval, rval, "divtmp");
+            ret = context.builder().CreateSDiv(lval, rval, "divtmp");
         } else if (Operator == "%") {
-            return context.builder().CreateSRem(lval, rval, "modtmp");
+            ret =  context.builder().CreateSRem(lval, rval, "modtmp");
         } else if (Operator == "<") {
-            return context.builder().CreateICmpSLT(lval, rval, "lttmp");
+            if ( lval->getType()->isFloatTy() )
+                ret =  context.builder().CreateFCmpOLT(lval, rval, "lttmp");
+            else if ( lval->getType()->isIntegerTy() )
+                ret = context.builder().CreateICmpSLT(lval, rval, "lttmp");
         } else if (Operator == ">") {
-            return context.builder().CreateICmpSGT(lval, rval, "gttmp");
+            if ( lval->getType()->isFloatTy() )
+                ret =  context.builder().CreateFCmpOGT(lval, rval, "gttmp");
+            else if ( lval->getType()->isIntegerTy() )
+                ret = context.builder().CreateICmpSGT(lval, rval, "gttmp");
         } else if (Operator == "<=") {
-            return context.builder().CreateICmpSLE(lval, rval, "letmp");
+            if ( lval->getType()->isFloatTy() )
+                ret =  context.builder().CreateFCmpOLE(lval, rval, "letmp");
+            else if ( lval->getType()->isIntegerTy() )
+                ret = context.builder().CreateICmpSLE(lval, rval, "letmp");
         } else if (Operator == ">=") {
-            return context.builder().CreateICmpSGE(lval, rval, "getmp");
+            if ( lval->getType()->isFloatTy() )
+                ret =  context.builder().CreateFCmpOGE(lval, rval, "getmp");
+            else if ( lval->getType()->isIntegerTy() )
+                ret = context.builder().CreateICmpSGE(lval, rval, "getmp");
         } else if (Operator == "==") {
-            return context.builder().CreateICmpEQ(lval, rval, "eqtmp");
+            if ( lval->getType()->isFloatTy() )
+                ret =  context.builder().CreateFCmpOEQ(lval, rval, "eqtmp");
+            else if ( lval->getType()->isIntegerTy() )
+                ret = context.builder().CreateICmpEQ(lval, rval, "eqtmp");
         } else if (Operator == "!=") {
-            return context.builder().CreateICmpNE(lval, rval, "netmp");
+            if ( lval->getType()->isFloatTy() )
+                ret =  context.builder().CreateFCmpONE(lval, rval, "netmp");
+            else if ( lval->getType()->isIntegerTy() )
+                ret = context.builder().CreateICmpNE(lval, rval, "netmp");
         } else if (Operator == "&&") {
-            return context.builder().CreateAnd(lval, rval, "andtmp");
+            ret = context.builder().CreateAnd(lval, rval, "andtmp");
         } else if (Operator == "||") {
-            return context.builder().CreateOr(lval, rval, "ortmp");
+            ret = context.builder().CreateOr(lval, rval, "ortmp");
         } else {
             //Invalid operator
             std::cerr << "Invalid operator" << std::endl;
-            return NULL;
         }
         return ret;
     }
