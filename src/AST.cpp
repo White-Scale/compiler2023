@@ -512,9 +512,10 @@ llvm::Value* ArrayVisitExpr::CodeGen(CodeGenContext& context){
         if(array->getType()->getPointerElementType()->isArrayTy()){
             addr = context.builder().CreateGEP(array, {zero,index}, "arraytmp");
         }else{
+            array = context.builder().CreateLoad(array, "arraytmp");
             addr = context.builder().CreateGEP(array ,index, "arraytmp");
         }
-
+        // addr = context.builder().CreateGEP(array, {zero,index}, "arraytmp");
         // llvm::Value* addr = context.builder().CreateExtractValue(index,array);
         //load element
         context._is_save = contextSave;
@@ -586,6 +587,7 @@ llvm::Value* ArrayVisitExpr::CodeGen(CodeGenContext& context){
 
     //ID LP Args RP, ID LP RP
     llvm::Value* CallFuncExpr::CodeGen(CodeGenContext& context){
+        bool contextSave = context._is_save;
         //get function from symbol table
         llvm::Function* function = context.getFunction(_name);
         if (!function) {
@@ -595,8 +597,21 @@ llvm::Value* ArrayVisitExpr::CodeGen(CodeGenContext& context){
         //generate arguments list
         std::vector<llvm::Value*> args;
         if (_args) {
-            for (Expression* arg : *_args) {
-                args.push_back(arg->CodeGen(context));
+            for (auto arg = _args->rbegin();arg!=_args->rend();arg++) {
+                auto zero = context.builder().getInt32(0);
+                //calculate address of element
+                llvm::Value* addr;
+                context._is_save = true;
+                llvm::Value* argument = (*arg)->CodeGen(context);
+                context._is_save = contextSave;
+                if(argument->getType()->isPointerTy()){
+                    if(argument->getType()->getPointerElementType()->isArrayTy()){
+                        argument = context.builder().CreateGEP(argument, {zero,zero}, "arraytmp");
+                    }else{
+                        argument = context.builder().CreateLoad(argument);
+                    }
+                }
+                args.push_back(argument);
             }
         }
         //generate call instruction

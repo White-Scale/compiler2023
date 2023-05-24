@@ -1,17 +1,30 @@
+int putchar(int a);
+int printf(char[] pattern,int a);
+int bar(int x, int[] y){
+    y[1] = x+1;
+    return 1;
+}
 int f(int x, int[] y) {
-    int s=2;
-    float t=3.5;
-    y[1] = s+t;
+    y[1] = x+1;
+    bar(y[1],y);
     return 1;
 }
 
 int main()
 {   
-    int a = 1;
+    int a = 101;
     int[3] c;
+    char[3] p;
+    p[0] = 37;
+    p[1] = 100;
+    p[3] = 0;
+    
     c[1] = 2;
     c[0] = 3;
-    c[2] = 5;
-    f(a,c);
+    c[2] = 101;
+    a = c[2];
+    f(101,c);
+    putchar(c[1]);
+    printf(p,c[1]);
     return 0;
 }
