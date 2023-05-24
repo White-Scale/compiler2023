@@ -143,8 +143,8 @@ Stmt        : Exp SEMI                          {$$ = new AST::ExpStmt($1);}
             ;
 /* Expressions */
 Exp         : Exp ASSIGNOP Exp                  {$$ = new AST::AssignOpExpr($1,$3);}
-            | Exp AND Exp                       {$$ = new AST::BinaryOpExpr("&",$1,$3);}
-            | Exp OR Exp                        {$$ = new AST::BinaryOpExpr("|",$1,$3);}
+            | Exp AND Exp                       {$$ = new AST::BinaryOpExpr("&&",$1,$3);}
+            | Exp OR Exp                        {$$ = new AST::BinaryOpExpr("||",$1,$3);}
             | Exp RELOP Exp                     {$$ = new AST::BinaryOpExpr(*$2,$1,$3);delete $2;}
             | Exp PLUS Exp                      {$$ = new AST::BinaryOpExpr("+",$1,$3);}
             | Exp MINUS Exp                     {$$ = new AST::BinaryOpExpr("-",$1,$3);}
