@@ -7,6 +7,8 @@ CodeGenContext::CodeGenContext()
       _functionTable(std::unordered_map<std::string, llvm::Function*>()) {
 }
 
+CodeGenContext::~CodeGenContext(){};
+
 llvm::LLVMContext& CodeGenContext::getLLVMContext() {
     return _llvmContext;
 }

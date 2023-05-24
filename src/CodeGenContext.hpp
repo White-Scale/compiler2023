@@ -16,6 +16,7 @@ public:
 
 public:
     CodeGenContext();
+    ~CodeGenContext();
 
     llvm::LLVMContext& getLLVMContext();
     llvm::Module* getModule();

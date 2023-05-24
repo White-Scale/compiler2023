@@ -229,58 +229,31 @@ namespace AST{
 
     //If Statement
     llvm::Value* IfStmt::CodeGen(CodeGenContext& context){
+        //get current function
+        llvm::Function* func = context.builder().GetInsertBlock()->getParent();
+        //create blocks for then and else
+        llvm::BasicBlock* thenBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "then", func);
+        llvm::BasicBlock* elseBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "else",func);
+        llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "ifcont",func);
         //generate code for condition
         llvm::Value* condValue = this->_cond->CodeGen(context);
         if (!condValue) {
             //Invalid condition
+            std::cerr << "Invalid condition" << std::endl;
             return NULL;
         }
-        condValue = context.builder().CreateIntCast(condValue, llvm::IntegerType::getInt32Ty(context.getLLVMContext()), true);
-        //convert condition to bool
-        condValue = context.builder().CreateICmpNE(condValue, llvm::ConstantInt::get(context.getLLVMContext(), llvm::APInt(32, 0)), "ifcond");
-        //get current function
-        llvm::Function* func = context.builder().GetInsertBlock()->getParent();
-        //create blocks for then and else
-        // llvm::BasicBlock* condBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "ifcond", func);
-        llvm::BasicBlock* thenBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "then", func);
-        llvm::BasicBlock* elseBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "else",func);
-        llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "ifcont",func);
         //create conditional branch
         context.builder().CreateCondBr(condValue, thenBlock, elseBlock);
         //generate code for then
-        func->getBasicBlockList().push_back(thenBlock);
+        // func->getBasicBlockList().push_back(thenBlock);
         context.builder().SetInsertPoint(thenBlock);
         llvm::Value* thenValue = _then->CodeGen(context);
-        if (!thenValue) {
-            //Invalid then
-            // std::cerr << "Invalid then" << std::endl;
-            // return NULL;
-        }
         context.builder().CreateBr(mergeBlock);
-        // thenBlock = context.builder().GetInsertBlock(); //update then block for phi node
-        //generate code for else if it exists
-        func->getBasicBlockList().push_back(elseBlock);
         context.builder().SetInsertPoint(elseBlock);
         llvm::Value* elseValue = NULL;
-        if (_else) {
-            elseValue = _else->CodeGen(context);
-            // if (!elseValue) {
-            //     //Invalid else
-            //     std::cerr << "Invalid else" << std::endl;
-            //     return NULL;
-            // }
-        }
         context.builder().CreateBr(mergeBlock);
-        elseBlock = context.builder().GetInsertBlock(); //update else block for phi node
         //generate code for merge
-        func->getBasicBlockList().push_back(mergeBlock);
         context.builder().SetInsertPoint(mergeBlock);
-        // llvm::PHINode* phiNode = context.builder().CreatePHI(llvm::Type::getVoidTy(context.getLLVMContext()), 2, "iftmp");
-        // phiNode->addIncoming(thenValue, thenBlock);
-        // if (_else) {
-        //     phiNode->addIncoming(elseValue, elseBlock);
-        // }
-        // return phiNode;
         return NULL;
     }
 
