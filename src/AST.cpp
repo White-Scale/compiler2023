@@ -248,6 +248,7 @@ namespace AST{
         //create conditional branch
         context.builder().CreateCondBr(condValue, thenBlock, elseBlock);
         //generate code for then
+        func->getBasicBlockList().push_back(thenBlock);
         context.builder().SetInsertPoint(thenBlock);
         llvm::Value* thenValue = _then->CodeGen(context);
         if (!thenValue) {
@@ -256,7 +257,7 @@ namespace AST{
             // return NULL;
         }
         context.builder().CreateBr(mergeBlock);
-        thenBlock = context.builder().GetInsertBlock(); //update then block for phi node
+        // thenBlock = context.builder().GetInsertBlock(); //update then block for phi node
         //generate code for else if it exists
         func->getBasicBlockList().push_back(elseBlock);
         context.builder().SetInsertPoint(elseBlock);
