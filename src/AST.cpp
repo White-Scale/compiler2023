@@ -241,6 +241,7 @@ namespace AST{
         //get current function
         llvm::Function* func = context.builder().GetInsertBlock()->getParent();
         //create blocks for then and else
+        // llvm::BasicBlock* condBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "ifcond", func);
         llvm::BasicBlock* thenBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "then", func);
         llvm::BasicBlock* elseBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "else",func);
         llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "ifcont",func);
@@ -284,11 +285,13 @@ namespace AST{
 
     //Return Statement
     llvm::Value* RetStmt::CodeGen(CodeGenContext& context){
+        bool contextSave = context._is_save;
+        
         if (_retval) {
             //generate code for return value
-            // context._is_save = true;
+            context._is_save = false;
             llvm::Value* retVal = this->_retval->CodeGen(context);
-            // context._is_save = false;
+            context._is_save = true;
             if (!retVal) {
                 //Invalid return value
                 std::cerr << "Invalid return value" << std::endl;
@@ -385,6 +388,8 @@ namespace AST{
 
     //Exp ASSIGNOP Exp
     llvm::Value* AssignOpExpr::CodeGen(CodeGenContext& context){
+        bool contextSave = context._is_save;
+        context._is_save = true;
         //generate code for left and right-hand side
         context._is_save = true;
         llvm::Value* lval = LHS->CodeGen(context);
@@ -403,11 +408,14 @@ namespace AST{
         }
         //store right-hand side to into left-hand side
         context.builder().CreateStore(rval, lval);
+        context._is_save = contextSave;
         return rval;
     }
 
     //Exp BinOP RHS
     llvm::Value* BinaryOpExpr::CodeGen(CodeGenContext& context){
+        bool contextSave = context._is_save;
+        context._is_save = false;
         //generate code for left and right-hand side
         llvm::Value* lval = this->LHS->CodeGen(context);
         llvm::Value* rval = this->RHS->CodeGen(context);
@@ -476,27 +484,34 @@ namespace AST{
             //Invalid operator
             std::cerr << "Invalid operator" << std::endl;
         }
+        context._is_save = contextSave;
         return ret;
     }
 
     //Minus Expression
     llvm::Value* MinusExpr::CodeGen(CodeGenContext& context){
+        bool contextSave = context._is_save;
+        context._is_save = false;
         //generate code for expression
         llvm::Value* val = this->Expr->CodeGen(context);
         //generate code for minus operation
+        context._is_save = contextSave;
         return context.builder().CreateNeg(val, "negtmp");
     }
 
     //Not Expression
     llvm::Value* NotExpr::CodeGen(CodeGenContext& context){
+        bool contextSave = context._is_save;
+        context._is_save = false;
         //generate code for expression
         llvm::Value* val = Expr->CodeGen(context);
         //generate code for not operation
+        context._is_save = contextSave;
         return context.builder().CreateNot(val, "nottmp");
     }
 
     //Exp LB Exp RB
-llvm::Value* ArrayVisitExpr::CodeGen(CodeGenContext& context){
+llvm::Value* ArrayVisitExpr::CodeGen(CodeGenContext& context){ 
         //generate code for array and index
         bool contextSave = context._is_save;
         context._is_save = true;
