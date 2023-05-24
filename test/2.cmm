@@ -1,8 +1,112 @@
-int;
-struct aaa{};
+int putchar(int a);
+int printf(char[] pattern,int a);
+int scanf(char[] pattern,int[] a);
+int readInt(){
+    char[5] p;
+    int[1] scanfRes;
+    p[0] = 37;
+    p[1] = 54;
+    p[2] = 100;
+    p[3] = 0; 
+    scanf(p,scanfRes);
+    return scanfRes[0];
+}
+int printInt(int x) {
+    char[5] p;
+    p[0] = 37;
+    p[1] = 49;
+    p[2] = 48;
+    p[3] = 100;
+    p[4] = 0;
+    printf(p,x);
+    return 0;
+}
+
 int main()
 {
-int i = 1;
-int j = ~i;
-int;
+    int row1, col1, row2, col2;
+    int[25][25] mat1;
+    int[25][25] mat2;
+    int[25][25] result;
+    int i=0, j=0, k=0, sign=0;
+    
+    row1 = readInt();
+    col1 = readInt();
+    i = 0;
+    while(i < row1) {
+        j = 0;
+        while(j < col1) {
+            mat1[i][j] = readInt();
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+
+    row2 = readInt();
+    col2 = readInt();
+    i = 0;
+    while(i < row2) {
+        j = 0;
+        while(j < col2) {
+            mat2[i][j] = readInt();
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    
+    if(col1 != row2) {
+        putchar(73);
+        putchar(110);
+        putchar(99);
+        putchar(111);
+        putchar(109);
+        putchar(112);
+        putchar(97);
+        putchar(116);
+        putchar(105);
+        putchar(98);
+        putchar(108);
+        putchar(101);
+        putchar(32);
+        putchar(68);
+        putchar(105);
+        putchar(109);
+        putchar(101);
+        putchar(110);
+        putchar(115);
+        putchar(105);
+        putchar(111);
+        putchar(110);
+        putchar(115);
+        putchar(10);
+        return 0;
+    }
+
+    i = 0;
+    while (i < row1) {
+        j = 0;
+        while (j < col2) {
+            result[i][j] = 0;
+            k = 0;
+            while (k < col1) {
+                result[i][j] = result[i][j] + mat1[i][k] * mat2[k][j];
+                k = k + 1;
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+
+    i = 0;
+    while (i < row1) {
+        j = 0;
+        while (j < col2) {
+            printInt(result[i][j]);
+            j = j + 1;
+        }
+        putchar(10);
+        i = i + 1;
+    }
+    
+    return 0;
 }
