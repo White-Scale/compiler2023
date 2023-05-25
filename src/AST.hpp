@@ -30,6 +30,7 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Target/TargetMachine.h>
+#include <llvm/Bitcode/BitcodeWriter.h>
 
 class CodeGenContext;
 
@@ -153,8 +154,9 @@ namespace AST {
             std::string _name;      //function name
             ArgList* _args;         //arguments
             CompStmt* _body;         //function body
-            FunDec() : _returnType(nullptr), _args(nullptr), _body(nullptr) {}
-            FunDec(VarType* __returnType, const std::string& __name, ArgList* __args, CompStmt* __body):_returnType(__returnType), _name(__name), _args(__args), _body(__body){};
+            bool _is_va;
+            FunDec() : _returnType(nullptr), _args(nullptr), _body(nullptr),_is_va(false) {}
+            FunDec(VarType* __returnType, const std::string& __name, ArgList* __args, CompStmt* __body,bool _is_va):_returnType(__returnType), _name(__name), _args(__args), _body(__body),_is_va(_is_va){};
             ~FunDec(){};
             llvm::Value* CodeGen(CodeGenContext& context);
     };  

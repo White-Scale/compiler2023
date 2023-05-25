@@ -67,6 +67,7 @@ AST::Program * p;
 %token LP RP LB RB LC RC
 %token STRUCT RETURN IF ELSE WHILE
 %token SEMI COMMA
+%token VA
 %token UMINUS /* use for the "negative" oprator */
 
 %right ASSIGNOP
@@ -113,10 +114,11 @@ VarInit     : ID                                {$$ = new AST::VarInit(*$1,NULL)
             /* Exp should be constant*/
             ;
 
-FunDec      : VarType ID LP ArgList RP SEMI         {$$ = new AST::FunDec($1,*$2,$4,NULL);delete $2;}
-            | VarType ID LP RP SEMI                 {auto emptyList = new AST::ArgList();$$ = new AST::FunDec($1,*$2,emptyList,NULL);delete $2;}
-            | VarType ID LP ArgList RP CompStmt         {$$ = new AST::FunDec($1,*$2,$4,$6);delete $2;}
-            | VarType ID LP RP CompStmt                 {auto emptyList = new AST::ArgList();$$ = new AST::FunDec($1,*$2,emptyList,$5);delete $2;}
+FunDec      : VarType ID LP ArgList RP SEMI         {$$ = new AST::FunDec($1,*$2,$4,NULL,false);delete $2;}
+            | VarType ID LP RP SEMI                 {auto emptyList = new AST::ArgList();$$ = new AST::FunDec($1,*$2,emptyList,NULL,false);delete $2;}
+            | VarType ID LP ArgList COMMA VA RP SEMI      {$$ = new AST::FunDec($1,*$2,$4,NULL,true);delete $2;}
+            | VarType ID LP ArgList RP CompStmt         {$$ = new AST::FunDec($1,*$2,$4,$6,false);delete $2;}
+            | VarType ID LP RP CompStmt                 {auto emptyList = new AST::ArgList();$$ = new AST::FunDec($1,*$2,emptyList,$5,false);delete $2;}
             ;
 ArgList     : ArgList COMMA Arg                 {$1->push_back($3);$$=$1;}
             | Arg                               {$$ = new AST::ArgList();$$->push_back($1);}

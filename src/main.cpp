@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <algorithm>
 #include "AST.hpp"
 #include "CodeGenContext.hpp"
 // #define yylex as extern "C"
@@ -10,6 +11,23 @@ int yyparse(void);
 void yyerror(const char *s);
 
 extern AST::Program * p;
+
+
+
+std::string replaceExtensionWithBC(const std::string& filename) {
+    std::string newFilename = filename;
+    size_t dotPos = newFilename.find_last_of('.');
+    size_t slashPos = newFilename.find_last_of('/');
+    size_t backslashPos = newFilename.find_last_of('\\');
+    size_t separatorPos = std::max(slashPos, backslashPos);
+
+    if (dotPos != std::string::npos && (dotPos > separatorPos || separatorPos == std::string::npos)) {
+        newFilename = newFilename.substr(0, dotPos) + ".bc";
+    } else {
+        newFilename += ".bc";
+    }
+    return newFilename;
+}
 
 int main(int argc, char **argv)
 {
@@ -25,6 +43,16 @@ int main(int argc, char **argv)
     ::yyparse();
     CodeGenContext cgc;
     p->CodeGen(cgc);
-    cgc._module->print(llvm::outs(),nullptr);
+    std::string inputFilename = std::string(argv[1]);
+    std::string outputFilename = replaceExtensionWithBC(inputFilename);
+    std::error_code errorCode;
+    llvm::raw_fd_ostream outputFile(outputFilename, errorCode, llvm::sys::fs::OF_None);
+    if (errorCode) {
+        std::cout << "cantnot open out put file";
+        return 1;
+    }
+    llvm::WriteBitcodeToFile(*(cgc._module), outputFile);
+    outputFile.close();
+    // cgc._module->print(llvm::outs(),nullptr);
     return 0;
 }
