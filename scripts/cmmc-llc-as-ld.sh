@@ -60,4 +60,5 @@ if [ ! -f "$executable_file_name" ]; then
   exit 1
 fi
 
+rm -f "$file_base.s" "$file_base.o" "$new_file_name"
 echo "成功生成可执行文件 $executable_file_name。"
