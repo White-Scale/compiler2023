@@ -1,6 +1,6 @@
 int putchar(int a);
-int printf(char[] pattern,int a);
-int scanf(char[] pattern,int[] a);
+int printf(char[] pattern,...);
+int scanf(char[] pattern,...);
 int readInt(){
     char[5] p;
     int[1] scanfRes;

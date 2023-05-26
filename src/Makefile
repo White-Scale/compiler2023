@@ -19,3 +19,6 @@ test:
 	./parser ../test/1.cmm > ../test/1.ll
 	llvm-as ../test/1.ll -o ../test/1.bc
 	clang ../test/1.bc -o 11.out
+
+clean:
+	rm -f parser syntax.tab.cpp syntax.tab.hpp lex.yy.cpp syntax.output *.ll *.bc *.out ../test/*.ll ../test/*.bc ../test/*.out

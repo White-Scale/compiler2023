@@ -70,7 +70,6 @@ namespace AST{
         class RetStmt;   //RETURN Exp SEMI
         // class IfElseStmt;    //IF LP Exp RP Stmt ELSE Stmt
         class WhileStmt; //WHILE LP Exp RP Stmt
-        class ForStmt;   //FOR LP Exp SEMI Exp SEMI Exp RP Stmt
 
     // class Definition;     //Def DefList
 
@@ -303,18 +302,6 @@ namespace AST {
             Statement* _body;
             WhileStmt(Expression* __cond, Statement* __body):_cond(__cond), _body(__body){};
             ~WhileStmt(){};
-            llvm::Value* CodeGen(CodeGenContext& context);
-    };
-
-    //For Statement
-    class ForStmt : public Statement {
-        public:
-            Expression* _init;
-            Expression* _cond;
-            Expression* _step;
-            Statement* _body;
-            ForStmt(Expression* __init, Expression* __cond, Expression* __step, Statement* _body):_init(__init), _cond(__cond), _step(__step), _body(_body){};
-            ~ForStmt(){};
             llvm::Value* CodeGen(CodeGenContext& context);
     };
 

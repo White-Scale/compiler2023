@@ -317,55 +317,6 @@ namespace AST{
         return NULL;    //return void
     }
 
-    //For Statement
-    llvm::Value* ForStmt::CodeGen(CodeGenContext& context){
-        //create blocks for init, condition, body and merge
-        llvm::Function* func = context.builder().GetInsertBlock()->getParent();
-        llvm::BasicBlock* initBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "forinit", func);
-        llvm::BasicBlock* condBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "forcond");
-        llvm::BasicBlock* bodyBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "forbody");
-        llvm::BasicBlock* mergeBlock = llvm::BasicBlock::Create(context.getLLVMContext(), "forcont");
-        //jump to init block before loop
-        context.builder().CreateBr(initBlock);
-        //generate code for init
-        context.builder().SetInsertPoint(initBlock);
-        if (this->_init) {
-            this->_init->CodeGen(context);
-        }
-        //jump to condition block
-        context.builder().CreateBr(condBlock);
-        //generate code for loop condition
-        context.builder().SetInsertPoint(condBlock);
-        llvm::Value* condValue = NULL;
-        if (this->_cond) {
-            condValue = this->_cond->CodeGen(context);
-            if (!condValue) {
-                //Invalid condition
-                std::cerr << "Invalid condition" << std::endl;
-                return NULL;
-            }
-        } else {
-            //if no condition, set condition to true
-            condValue = llvm::ConstantInt::get(context.getLLVMContext(), llvm::APInt(32, 1));
-        }
-        //jump to body when condition is true
-        context.builder().CreateCondBr(condValue, bodyBlock, mergeBlock);
-        //generate code for loop body
-        context.builder().SetInsertPoint(bodyBlock);
-        if (this->_body) {
-            this->_body->CodeGen(context);
-        }
-        //generate code for loop increment
-        if (this->_step) {
-            this->_step->CodeGen(context);
-        }
-        //jump back to condition block
-        context.builder().CreateBr(condBlock);
-        //set insert point to merge block
-        context.builder().SetInsertPoint(mergeBlock);
-        return NULL;    //return void
-    }
-
     //Exp ASSIGNOP Exp
     llvm::Value* AssignOpExpr::CodeGen(CodeGenContext& context){
         bool contextSave = context._is_save;
@@ -417,15 +368,30 @@ namespace AST{
         llvm::Value* ret = NULL;
         //perform binary operation
         if (Operator == "+") {
-            ret = context.builder().CreateAdd(lval, rval, "addtmp");
+            if ( lval->getType()->isFloatTy() )
+                ret = context.builder().CreateFAdd(lval, rval, "addtmp");
+            else if ( lval->getType()->isIntegerTy() )
+                ret = context.builder().CreateAdd(lval, rval, "addtmp");
         } else if (Operator == "-") {
-            ret =  context.builder().CreateSub(lval, rval, "subtmp");
+            if ( lval->getType()->isFloatTy() )
+                ret = context.builder().CreateFSub(lval, rval, "subtmp");
+            else if ( lval->getType()->isIntegerTy() )
+                ret = context.builder().CreateSub(lval, rval, "subtmp");
         } else if (Operator == "*") {
-            ret = context.builder().CreateMul(lval, rval, "multmp");
+            if ( lval->getType()->isFloatTy() )
+                ret = context.builder().CreateFMul(lval, rval, "multmp");
+            else if ( lval->getType()->isIntegerTy() )
+                ret = context.builder().CreateMul(lval, rval, "multmp");
         } else if (Operator == "/") {
-            ret = context.builder().CreateSDiv(lval, rval, "divtmp");
+            if ( lval->getType()->isFloatTy() )
+                ret = context.builder().CreateFDiv(lval, rval, "divtmp");
+            else if ( lval->getType()->isIntegerTy() )
+                ret = context.builder().CreateSDiv(lval, rval, "divtmp");
         } else if (Operator == "%") {
-            ret =  context.builder().CreateSRem(lval, rval, "modtmp");
+            if ( lval->getType()->isFloatTy() )
+                ret = context.builder().CreateFRem(lval, rval, "modtmp");
+            else if ( lval->getType()->isIntegerTy() )
+                ret = context.builder().CreateSRem(lval, rval, "modtmp");
         } else if (Operator == "<") {
             if ( lval->getType()->isFloatTy() )
                 ret =  context.builder().CreateFCmpOLT(lval, rval, "lttmp");
