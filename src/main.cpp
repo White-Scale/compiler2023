@@ -53,6 +53,5 @@ int main(int argc, char **argv)
     }
     llvm::WriteBitcodeToFile(*(cgc._module), outputFile);
     outputFile.close();
-    // cgc._module->print(llvm::outs(),nullptr);
     return 0;
 }

@@ -2,11 +2,10 @@
 #include"AST.hpp"
 
 namespace AST{
-    //Program
+    //Program 
     llvm::Value* Program::CodeGen(CodeGenContext& context){
         for(auto& dec : *(this->_decs)){
             dec->CodeGen(context);
-            // dec->CodeGen(context)->print(llvm::outs());
         }
         return NULL;
     }
@@ -36,16 +35,9 @@ namespace AST{
                 }
             }
         }
-        // if(_is_va){
-        //     llvm::Type* argType = llvm::Type::getInt32Ty(context.getLLVMContext()); 
-        //     llvm::Type* varArgType = llvm::PointerType::get(argType, 0); 
-        //     argTypes.push_back(argType);
-        //     argTypes.push_back(varArgType);
-        // }
         //get function type
         llvm::FunctionType* funcType = llvm::FunctionType::get(this->_returnType->GetType(context), argTypes, _is_va);
         //create function
-        // llvm::Function::create
         llvm::Function* func = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, this->_name, context.getModule());
         context.AddFunc(this->_name, func);
         if(_body!=NULL){
