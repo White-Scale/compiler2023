@@ -206,12 +206,7 @@ namespace AST{
         llvm::Value* lastValue = NULL;
         if(_stmts != NULL){
             for(Statement* stmt : *_stmts){
-                lastValue = stmt->CodeGen(context);
-                // if (!lastValue) {
-                //     //Invalid statement
-                //     std::cerr << "Invalid statement" << std::endl;
-                //     return NULL;
-                // }
+                stmt->CodeGen(context);
             }
         }
         //pop the symbol table
@@ -468,9 +463,6 @@ llvm::Value* ArrayVisitExpr::CodeGen(CodeGenContext& context){
             array = context.builder().CreateLoad(array, "arraytmp");
             addr = context.builder().CreateGEP(array ,index, "arraytmp");
         }
-        // addr = context.builder().CreateGEP(array, {zero,index}, "arraytmp");
-        // llvm::Value* addr = context.builder().CreateExtractValue(index,array);
-        //load element
         context._is_save = contextSave;
         llvm::Value* ret;
         if(contextSave){
