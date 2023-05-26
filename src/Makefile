@@ -1,24 +1,17 @@
 CC=g++
 LLVM_flags = `llvm-config --libs core mcjit native --cxxflags --ldflags` 
-# -w  -DLLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1
+
+# cmmc means c minus minus compiler
+cmmc: main.cpp syntax.tab.cpp 
+	$(CC) $(LLVM_flags) \
+	 main.cpp syntax.tab.cpp AST.cpp CodeGenContext.cpp -lfl -ly   \
+	 $(LLVM_flags)  -g -o cmmc
+
 syntax.tab.hpp: syntax.tab.cpp
-# bison -d -v syntax.y
 lex.yy.cpp: lexical.l syntax.tab.hpp
 	flex -o lex.yy.cpp lexical.l 
-# scanner: main.c lex.yy.c
-# 	$(CC) main.c lex.yy.c -lfl -o scanner
 syntax.tab.cpp: syntax.y lex.yy.cpp
 	bison  -v -d syntax.y -o syntax.tab.cpp
-parser: main.cpp syntax.tab.cpp 
-# $(CC) main.cpp syntax.tab.cpp lex.yy.cpp -lfl -ly -o parser
-	$(CC) `llvm-config --libs core mcjit native --cxxflags --ldflags` \
-	 main.cpp syntax.tab.cpp AST.cpp CodeGenContext.cpp -lfl -ly   \
-	 `llvm-config --libs core mcjit native --cxxflags --ldflags` -g -o parser
-
-test:
-	./parser ../test/1.cmm > ../test/1.ll
-	llvm-as ../test/1.ll -o ../test/1.bc
-	clang ../test/1.bc -o 11.out
 
 clean:
-	rm -f parser syntax.tab.cpp syntax.tab.hpp lex.yy.cpp syntax.output *.ll *.bc *.out ../test/*.ll ../test/*.bc ../test/*.out
+	rm -f cmmc syntax.tab.cpp syntax.tab.hpp lex.yy.cpp syntax.output *.ll *.bc *.out ../test/*.ll ../test/*.bc ../test/*.out

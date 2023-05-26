@@ -1,0 +1,62 @@
+\begin{alignat*}{8}
+    Program     &\rightarrow \space ExtDefList\\
+    ExtDefList  &\rightarrow \space ExtDef  \space ExtDefList\\
+                &\rightarrow \space \epsilon\\
+    ExtDef      &\rightarrow \space  VarDec\\
+                &\rightarrow \space  FunDec\\
+    /* Types*/\\
+    VarType     &\rightarrow \space  TYPE\\
+                &\rightarrow \space  ArrayType\\
+    ArrayType   &\rightarrow \space  VarType \space LB \space INT \space RB\\
+                &\rightarrow \space  VarType \space LB \space RB\\
+    /* Declarations */\\
+    VarDec      &\rightarrow \space  VarType \space VarList \space SEMI\\
+    VarList     &\rightarrow \space  VarInit \space , \space VarList\\
+                &\rightarrow \space  VarInit\\
+    VarInit     &\rightarrow \space  ID\\
+                &\rightarrow \space  ID \space = \space Exp\\
+                /* Exp should be constant*/
+    FunDec      &\rightarrow \space VarType \space ID \space ( \space ArgList \space ) \space SEMI\\
+                &\rightarrow \space VarType \space ID \space ( \space ) \space SEMI\\
+                &\rightarrow \space VarType \space ID \space ( .. \space ) \space SEMI\\
+                &\rightarrow \space VarType \space ID \space ( \space ArgList \space , \space ... \space ) \space SEMI\\
+                &\rightarrow \space VarType \space ID \space ( \space ArgList \space ) \space CompStmt\\
+                &\rightarrow \space VarType \space ID \space ( \space ) \space CompStmt\\
+    ArgList     &\rightarrow \space ArgList \space , \space Arg\\
+                &\rightarrow \space Arg\\
+    Arg         &\rightarrow \space VarType \space ID\\
+    /* Statements */\\
+    CompStmt    &\rightarrow \space \{ \space VarDecList \space StmtList \space \}\\
+                &\rightarrow \space error \space \}\\
+    StmtList    &\rightarrow \space Stmt \space StmtList\\
+                &\rightarrow \space \epsilon\\
+    VarDecList  &\rightarrow \space VarDec \space VarDecList\\
+                &\rightarrow \space \epsilon\\
+    Stmt        &\rightarrow \space Exp \space SEMI\\
+                &\rightarrow \space CompStmt\\
+                &\rightarrow \space RETURN \space Exp \space SEMI\\
+                &\rightarrow \space IF \space ( \space Exp \space ) \space Stmt\\
+                &\rightarrow \space IF \space ( \space Exp \space ) \space Stmt \space ELSE \space Stmt\\
+                &\rightarrow \space WHILE \space ( \space Exp \space ) \space Stmt\\
+                &\rightarrow \space error \space SEMI\\
+    /* Expressions */\\
+    Exp         &\rightarrow \space Exp \space = \space Exp\\
+                &\rightarrow \space Exp \space \&\& \space Exp\\
+                &\rightarrow \space Exp \space || \space Exp\\
+                &\rightarrow \space Exp \space RELOP \space Exp\\
+                &\rightarrow \space Exp \space + \space Exp\\
+                &\rightarrow \space Exp \space - \space Exp\\
+                &\rightarrow \space Exp \space * \space Exp\\
+                &\rightarrow \space Exp \space \backslash \space Exp\\
+                &\rightarrow \space ( \space Exp \space )\\
+                &\rightarrow \space - \space Exp\\
+                &\rightarrow \space ! \space Exp\\
+                &\rightarrow \space ID \space ( \space Args \space )\\
+                &\rightarrow \space ID \space ( \space )\\
+                &\rightarrow \space Exp \space LB \space Exp \space RB\\
+                &\rightarrow \space ID\\
+                &\rightarrow \space INT\\
+                &\rightarrow \space FLOAT\\
+    Args        &\rightarrow \space Exp \space , \space Args\\
+                &\rightarrow \space Exp\\
+    \end{alignat*}
