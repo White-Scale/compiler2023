@@ -141,7 +141,7 @@ Stmt        : Exp SEMI                          {$$ = new AST::ExpStmt($1);}
             | IF LP Exp RP Stmt  %prec LOWER_THAN_ELSE  {$$ = new AST::IfStmt($3,$5,NULL);}
             | IF LP Exp RP Stmt ELSE Stmt       {$$ = new AST::IfStmt($3,$5,$7);}
             | WHILE LP Exp RP Stmt              {$$ = new AST::WhileStmt($3,$5);}
-            | /* error recovery*/ error SEMI    {;}
+            | /* error recovery*/ error SEMI    {printf("wrong statement\n");}
             ;
 /* Expressions */
 Exp         : Exp ASSIGNOP Exp                  {$$ = new AST::AssignOpExpr($1,$3);}
@@ -158,6 +158,7 @@ Exp         : Exp ASSIGNOP Exp                  {$$ = new AST::AssignOpExpr($1,$
             | ID LP Args RP                     {$$ = new AST::CallFuncExpr(*$1,$3);delete $1;}
             | ID LP RP                          {$$ = new AST::CallFuncExpr(*$1,NULL);delete $1;}
             | Exp LB Exp RB                     {$$ = new AST::ArrayVisitExpr($1,$3);}
+            | Exp LB Exp error RB                     {printf("missing ]\n");}
             | Exp DOT ID                        {$$ = new AST::StructVisitExpr($1,*$3);} /* struct not finsh*/
             | ID                                {$$ = new AST::IDExpr(*$1);delete $1;}
             | INT                               {$$ = new AST::IntExpr($1);}

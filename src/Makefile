@@ -1,6 +1,10 @@
 CC=g++
 LLVM_flags = `llvm-config --libs core mcjit native --cxxflags --ldflags` 
 
+default: 
+	make cmmc
+	rm -f syntax.tab.cpp syntax.tab.hpp lex.yy.cpp syntax.output 
+
 # cmmc means c minus minus compiler
 cmmc: main.cpp syntax.tab.cpp 
 	$(CC) $(LLVM_flags) \
