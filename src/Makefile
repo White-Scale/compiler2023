@@ -8,7 +8,7 @@ default:
 # cmmc means c minus minus compiler
 cmmc: main.cpp syntax.tab.cpp 
 	$(CC) $(LLVM_flags) \
-	 main.cpp syntax.tab.cpp AST.cpp CodeGenContext.cpp -lfl -ly   \
+	 main.cpp syntax.tab.cpp AST.cpp CodeGenContext.cpp visualization.cpp -lfl -ly   \
 	 $(LLVM_flags)  -g -o cmmc
 
 syntax.tab.hpp: syntax.tab.cpp

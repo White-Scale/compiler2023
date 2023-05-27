@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <algorithm>
+#include <regex>
+#include <fstream>
 #include "AST.hpp"
 #include "CodeGenContext.hpp"
 // #define yylex as extern "C"
@@ -11,8 +13,7 @@ int yyparse(void);
 void yyerror(const char *s);
 
 extern AST::Program * p;
-
-
+extern void generateDotFile(AST::Program* program, std::string& dotFilename);
 
 std::string replaceExtensionWithBC(const std::string& filename) {
     std::string newFilename = filename;
@@ -45,12 +46,22 @@ int main(int argc, char **argv)
     p->CodeGen(cgc);
     std::string inputFilename = std::string(argv[1]);
     std::string outputFilename = replaceExtensionWithBC(inputFilename);
+    
+    //generate dot file for AST     ./cmmc ../test/1.cmm -v
+    if(argc == 3 && std::string(argv[2]) == "-v") {
+        std::string dotFilename = inputFilename + ".dot";
+        generateDotFile(p, dotFilename);
+        std::string cmd = "dot -Tpng -o " + inputFilename + ".png " + dotFilename;
+        system(cmd.data());
+    }
+
     std::error_code errorCode;
     llvm::raw_fd_ostream outputFile(outputFilename, errorCode, llvm::sys::fs::OF_None);
     if (errorCode) {
         std::cout << "cantnot open out put file";
         return 1;
     }
+
     llvm::WriteBitcodeToFile(*(cgc._module), outputFile);
     outputFile.close();
     return 0;

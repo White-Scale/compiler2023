@@ -99,6 +99,7 @@ namespace AST {
             Node(){}
             ~Node() {}
             virtual llvm::Value* CodeGen(CodeGenContext& context) = 0;
+            virtual std::vector<Node*> getChildren() = 0;
     };
 
     //Program Interface
@@ -109,6 +110,7 @@ namespace AST {
             Program(std::vector<Declaration*>* __decs):_decs(__decs){};
             ~Program(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
     
     //Declaration Interface
@@ -117,6 +119,7 @@ namespace AST {
             Declaration(){}
             ~Declaration(){}
             virtual llvm::Value* CodeGen(CodeGenContext& context) = 0;
+            virtual std::vector<Node*> getChildren() = 0;
     };
 
     //Varaible Declaration
@@ -130,6 +133,7 @@ namespace AST {
             VarDec(VarType* __VarType, VarList* __VarList):_VarType(__VarType), _VarList(__VarList){};
             ~VarDec(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //a variable declaration with initialization
@@ -141,6 +145,7 @@ namespace AST {
             VarInit(const std::string& __name, Expression* __value):_name(__name), _value(__value){}
             ~VarInit(){}
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //Function Declaration
@@ -158,6 +163,7 @@ namespace AST {
             FunDec(VarType* __returnType, const std::string& __name, ArgList* __args, CompStmt* __body,bool _is_va):_returnType(__returnType), _name(__name), _args(__args), _body(__body),_is_va(_is_va){};
             ~FunDec(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };  
 
     //Function argument
@@ -169,6 +175,7 @@ namespace AST {
             Arg(VarType* __type, std::string __name):_type(__type), _name(__name){};
             ~Arg(){};
             llvm::Value* CodeGen(CodeGenContext& context) {return nullptr;}
+            std::vector<Node*> getChildren();
     };
 
     //Function argument list
@@ -179,9 +186,6 @@ namespace AST {
             llvm::Value* CodeGen(CodeGenContext& context) {return nullptr;}
     };
 
-    //Function body
-
-
     //Type Declaration
     class TypeDec : public Declaration {
         public:
@@ -190,6 +194,7 @@ namespace AST {
             TypeDec(VarType* __type, const std::string& __alias):_type(__type), _alias(__alias){};
             ~TypeDec(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //Base class for variable type
@@ -200,6 +205,7 @@ namespace AST {
             ~VarType(){}
             virtual llvm::Type* GetType(CodeGenContext& context) = 0;
             virtual llvm::Value* CodeGen(CodeGenContext& context) {return nullptr;}
+            virtual std::vector<Node*> getChildren() {return std::vector<Node*>();}
     };
 
     //Basic Type
@@ -214,6 +220,7 @@ namespace AST {
             BasicType(TypeID __type):_type(__type){};
             ~BasicType(){};
             llvm::Type* GetType(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //Array Type
@@ -224,6 +231,7 @@ namespace AST {
             ArrayType(VarType* __type, int __size):_type(__type), _size(__size){};
             ~ArrayType(){};
             llvm::Type* GetType(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //Struct Type
@@ -254,6 +262,7 @@ namespace AST {
             Statement(){}
             ~Statement(){}
             virtual llvm::Value* CodeGen(CodeGenContext& context) = 0;
+            virtual std::vector<Node*> getChildren() {return std::vector<Node*>();}
     };
 
     //Compound Statement
@@ -264,6 +273,7 @@ namespace AST {
             CompStmt(std::vector<VarDec*> * _varDecs,std::vector<Statement*>* __stmts):_stmts(__stmts),_varDecs(_varDecs){};
             ~CompStmt(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //Expression Statement
@@ -273,6 +283,7 @@ namespace AST {
             ExpStmt(Expression* _exp):_exp(_exp){};
             ~ExpStmt(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //If Statement
@@ -284,6 +295,7 @@ namespace AST {
             IfStmt(Expression* __cond, Statement* __then, Statement* __else = nullptr):_cond(__cond), _then(__then), _else(__else){};
             ~IfStmt(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //Return Statement
@@ -293,6 +305,7 @@ namespace AST {
             RetStmt(Expression* __retval):_retval(__retval){};
             ~RetStmt(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //While Statement
@@ -303,6 +316,7 @@ namespace AST {
             WhileStmt(Expression* __cond, Statement* __body):_cond(__cond), _body(__body){};
             ~WhileStmt(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //Expression Interface
@@ -311,6 +325,7 @@ namespace AST {
             Expression(){}
             ~Expression(){}
             virtual llvm::Value* CodeGen(CodeGenContext& context) = 0;
+            virtual std::vector<Node*> getChildren() {return std::vector<Node*>();}
     };
 
     //Exp ASSIGN Exp
@@ -321,6 +336,7 @@ namespace AST {
             Expression* RHS;
             AssignOpExpr(Expression* LHS, Expression* RHS):LHS(LHS), RHS(RHS){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //Exp BinOP RHS
@@ -332,6 +348,7 @@ namespace AST {
             BinaryOpExpr(std::string Operator, Expression* LHS, Expression* RHS):Operator(Operator), LHS(LHS), RHS(RHS){};
             ~BinaryOpExpr() {};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //Minus Expression
@@ -341,6 +358,7 @@ namespace AST {
             MinusExpr(Expression* Expr) : Expr(Expr){};
             ~MinusExpr(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //Not Expression
@@ -350,6 +368,7 @@ namespace AST {
             NotExpr(Expression* Expr) : Expr(Expr){};
             ~NotExpr(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //Exp LB Exp RB
@@ -360,6 +379,7 @@ namespace AST {
             ArrayVisitExpr(Expression* Array, Expression* Index):Array(Array), Index(Index){};
             ~ArrayVisitExpr(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //INT
@@ -369,6 +389,7 @@ namespace AST {
             IntExpr(int value):value(value){};
             ~IntExpr(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //FLOAT
@@ -378,6 +399,7 @@ namespace AST {
             FloatExpr(float value):value(value){};
             ~FloatExpr(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //ID
@@ -387,6 +409,7 @@ namespace AST {
             IDExpr(std::string str):name(str){};
             ~IDExpr(){};
             llvm::Value* CodeGen(CodeGenContext& context);
+            std::vector<Node*> getChildren();
     };
 
     //Exp . ID
@@ -407,6 +430,7 @@ namespace AST {
         CallFuncExpr(std::string _name,Args * _args):_name(_name),_args(_args){};
         ~CallFuncExpr(){};
         llvm::Value* CodeGen(CodeGenContext& context);
+        std::vector<Node*> getChildren();
     };
     
 }
