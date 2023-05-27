@@ -170,6 +170,19 @@ AST模块应该加入syntax模块中使用，在进行语法分析的同时通�
 
 注意，codegen函数应该递归地调用子节点的codegen函数，以确保整个抽象语法树都能正确地转化为LLVM IR。
 
+## AST可视化
+为了更好地理解程序的结构和逻辑，项目后期加入了AST的可视化模块，相关代码位于`src/visualization`中。
+
+我们的AST可视化部分主要包含以下几个步骤：
+
+1. 定义AST节点类：我们定义了表示不同类型节点的类，例如Program、VarDec、FunDec等。每个节点类都包含了获取子节点的方法，用于后续遍历。
+
+2. 生成DOT语法：我们编写了一个递归函数`generateDot`，用于为每个节点生成对应的DOT语法。在该函数中，我们为每个节点分配唯一的ID，并根据节点的类型和关系生成相应的DOT语句。
+
+3. 生成DOT文件：我们编写了一个函数`generateDotFile`，该函数接受AST的根节点作为参数，并调用`generateDot`函数生成整个AST的DOT语法。生成的DOT语法被写入到一个DOT文件中，以便后续使用Graphviz进行可视化。
+
+4. 可视化AST：我们使用Graphviz工具来读取生成的DOT文件，并将其转换为可视化图形。通过运行Graphviz命令，我们可以生成AST的可视化结果，展示了程序的结构和层次关系。
+
 # 如何使用本项目
 简易的上手教程在readme.md中
 
@@ -177,3 +190,575 @@ AST模块应该加入syntax模块中使用，在进行语法分析的同时通�
 对于生成的中间代码，可以使用clang的wrapper直接编译链接、也可以使用llc编译为汇编后再有gcc提供的warpper进行汇编和链接
 当然也可以直接使用llc将IR编译为汇编后使用as进行汇编，并使用ld手动链接所需要的运行时c库
 已经将三种不同的方式的脚本放在了script文件夹中
+
+# 测试案例
+
+## 数据类型测试
+
+### 基本类型测试
+1. 测试代码
+    ```c
+    int main()
+    {
+        int a=100;
+        float b=0.0;
+        int c;
+        c = -2;
+    }
+    ```
+2. AST
+    ![image/test11.png](image/test11.png)
+
+3. IR
+    ```asm
+    ; ModuleID = 'main'
+    source_filename = "main"
+
+    define i32 @main() {
+    entry:
+    %a = alloca i32
+    %b = alloca float
+    %c = alloca i32
+    store float 0.000000e+00, float* %b
+    store i32 100, i32* %a
+    store i32 -2, i32* %c
+    ret i32 undef
+    }
+    ```
+
+4. 运行结果(添加输出)
+
+    ![image/test12.png](image/test12.png)
+
+### 数组类型测试
+1. 测试代码
+    ```c
+    int main()
+    {
+        int[3][2] a;
+        float[2] b;
+        a[2][1] = 5;
+        b[1] = 0.0;
+    }
+    ```
+2. AST
+    ![image/test21.png](image/test21.png)
+
+3. IR
+    ```asm
+    ; ModuleID = 'main'
+    source_filename = "main"
+
+    define i32 @main() {
+    entry:
+    %a = alloca [2 x [3 x i32]]
+    %b = alloca [2 x float]
+    %arraytmp = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %a, i32 0, i32 2
+    %arraytmp1 = getelementptr [3 x i32], [3 x i32]* %arraytmp, i32 0, i32 1
+    store i32 5, i32* %arraytmp1
+    %arraytmp2 = getelementptr [2 x float], [2 x float]* %b, i32 0, i32 1
+    store float 0.000000e+00, float* %arraytmp2
+    ret i32 undef
+    }
+    ```
+
+4. 运行结果(添加输出)
+
+    ![image/test22.png](image/test22.png)
+
+
+### 类型转换测试
+1. 测试代码
+    ```c
+    int main()
+    {
+        float b=5.5;
+        int c=0;
+        b = c;
+    }
+    ```
+2. AST
+
+    ![image/test31.png](image/test31.png)
+
+3. IR
+    ```asm
+    ; ModuleID = 'main'
+    source_filename = "main"
+
+    define i32 @main() {
+    entry:
+    %b = alloca float
+    %c = alloca i32
+    store i32 0, i32* %c
+    store float 5.500000e+00, float* %b
+    %0 = load i32, i32* %c
+    %1 = bitcast i32 %0 to float
+    store float %1, float* %b
+    ret i32 undef
+    }
+    ```
+4. 运行结果(添加输出)
+
+    ![image/test32.png](image/test32.png)
+
+## 表达式测试
+1. 测试代码
+    ```c
+    int main()
+    {
+        int[3] a;
+        int b, c;
+        a[0] = 1;
+        b=2;
+        a[1] = b/2+5;
+        c=-b;
+        b = c+b;
+        a[2] = a[1] * c;
+    }
+    ```
+2. AST
+
+    ![image/test41.png](image/test41.png)
+
+3. IR
+    ```asm
+    ; ModuleID = 'main'
+    source_filename = "main"
+
+    define i32 @main() {
+    entry:
+    %a = alloca [3 x i32]
+    %b = alloca i32
+    %c = alloca i32
+    %arraytmp = getelementptr [3 x i32], [3 x i32]* %a, i32 0, i32 0
+    store i32 1, i32* %arraytmp
+    store i32 2, i32* %b
+    %arraytmp1 = getelementptr [3 x i32], [3 x i32]* %a, i32 0, i32 1
+    %0 = load i32, i32* %b
+    %divtmp = sdiv i32 %0, 2
+    %addtmp = add i32 %divtmp, 5
+    store i32 %addtmp, i32* %arraytmp1
+    %1 = load i32, i32* %b
+    %negtmp = sub i32 0, %1
+    store i32 %negtmp, i32* %c
+    %2 = load i32, i32* %c
+    %3 = load i32, i32* %b
+    %addtmp2 = add i32 %2, %3
+    store i32 %addtmp2, i32* %b
+    %arraytmp3 = getelementptr [3 x i32], [3 x i32]* %a, i32 0, i32 2
+    %arraytmp4 = getelementptr [3 x i32], [3 x i32]* %a, i32 0, i32 1
+    %arrayloadtmp = load i32, i32* %arraytmp4
+    %4 = load i32, i32* %c
+    %multmp = mul i32 %arrayloadtmp, %4
+    store i32 %multmp, i32* %arraytmp3
+    ret i32 undef
+    }
+    ```
+
+4. 运行结果(添加输出)
+
+    ![image/test42.png](image/test42.png)
+
+## 语句测试
+
+### If语句测试
+1. 测试代码
+    ```c
+    int main()
+    {
+        int a = 54;
+        int flag;
+        if(a<10) flag = 1;
+        else flag = 0;
+        return 0;
+    }
+    ```
+
+2. AST
+
+    ![image/test51.png](image/test51.png)
+
+3. IR
+    ```asm
+    ; ModuleID = 'main'
+    source_filename = "main"
+
+    define i32 @main() {
+    entry:
+    %a = alloca i32
+    %flag = alloca i32
+    store i32 54, i32* %a
+    %0 = load i32, i32* %a
+    %lttmp = icmp slt i32 %0, 10
+    br i1 %lttmp, label %then, label %else
+
+    then:                                             ; preds = %entry
+    store i32 1, i32* %flag
+    br label %ifcont
+
+    else:                                             ; preds = %entry
+    br label %ifcont
+
+    ifcont:                                           ; preds = %else, %then
+    ret i32 0
+    }
+    ```
+
+### While语句测试
+1. 测试代码
+    ```c
+    int main()
+    {
+        int a = 54, cnt = 0;
+        while(a>0) {
+            cnt = cnt+1;
+            a = a/2;
+        }
+        return 0;
+    }
+    ```
+
+2. AST
+
+    ![image/test61.png](image/test61.png)
+
+3. IR
+    ```asm
+    ; ModuleID = 'main'
+    source_filename = "main"
+
+    define i32 @main() {
+    entry:
+    %a = alloca i32
+    %cnt = alloca i32
+    store i32 0, i32* %cnt
+    store i32 54, i32* %a
+    br label %whilecond
+
+    whilecond:                                        ; preds = %whilebody, %entry
+    %0 = load i32, i32* %a
+    %gttmp = icmp sgt i32 %0, 0
+    br i1 %gttmp, label %whilebody, label %whilecont
+
+    whilebody:                                        ; preds = %whilecond
+    %1 = load i32, i32* %cnt
+    %addtmp = add i32 %1, 1
+    store i32 %addtmp, i32* %cnt
+    %2 = load i32, i32* %a
+    %divtmp = sdiv i32 %2, 2
+    store i32 %divtmp, i32* %a
+    br label %whilecond
+
+    whilecont:                                        ; preds = %whilecond
+    ret i32 0
+    }
+    ```
+
+### Return语句测试
+1. 测试代码
+    ```c
+    int main()
+    {
+        return 0;
+    }
+    ```
+
+2. AST
+
+    ![image/test71.png](image/test71.png)
+
+3. IR
+    ```asm
+    ; ModuleID = 'main'
+    source_filename = "main"
+
+    define i32 @main() {
+    entry:
+    ret i32 0
+    }
+    ```
+
+## 函数测试
+
+### 简单函数
+1. 测试代码
+    ```c
+    int putchar(int a);
+    int printf(char[] pattern,...);
+    int scanf(char[] pattern,...);
+    int readInt(){
+        char[5] p;
+        int[1] scanfRes;
+        p[0] = 37;
+        p[1] = 100;
+        p[2] = 0; 
+        scanf(p,scanfRes);
+        return scanfRes[0];
+    }
+    int printInt(int x) {
+        char[5] p;
+        p[0] = 37;
+        p[1] = 100;
+        p[2] = 0;
+        printf(p,x);
+        return 0;
+    }
+
+    int add(int a, int b) {
+        return a+b;
+    }
+
+    int main()
+    {
+        int a, b;
+        a = readInt();
+        b = readInt();
+        printInt(add(a,b));
+        putchar(10);
+    }
+    ```
+
+2. AST
+
+    ![image/test81.png](image/test81.png)
+
+3. IR
+    ```asm
+    ; ModuleID = 'main'
+    source_filename = "main"
+
+    declare i32 @putchar(i32)
+
+    declare i32 @printf(i8*, ...)
+
+    declare i32 @scanf(i8*, ...)
+
+    define i32 @readInt() {
+    entry:
+    %p = alloca [5 x i8]
+    %scanfRes = alloca [1 x i32]
+    %arraytmp = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+    store i8 37, i8* %arraytmp
+    %arraytmp1 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 1
+    store i8 100, i8* %arraytmp1
+    %arraytmp2 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 2
+    store i8 0, i8* %arraytmp2
+    %arraytmp3 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+    %arraytmp4 = getelementptr [1 x i32], [1 x i32]* %scanfRes, i32 0, i32 0
+    %calltmp = call i32 (i8*, ...) @scanf(i8* %arraytmp3, i32* %arraytmp4)
+    %arraytmp5 = getelementptr [1 x i32], [1 x i32]* %scanfRes, i32 0, i32 0
+    %arrayloadtmp = load i32, i32* %arraytmp5
+    ret i32 %arrayloadtmp
+    }
+
+    define i32 @printInt(i32 %x) {
+    entry:
+    %p = alloca [5 x i8]
+    %x1 = alloca i32
+    store i32 %x, i32* %x1
+    %arraytmp = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+    store i8 37, i8* %arraytmp
+    %arraytmp2 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 1
+    store i8 100, i8* %arraytmp2
+    %arraytmp3 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 2
+    store i8 0, i8* %arraytmp3
+    %arraytmp4 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+    %0 = load i32, i32* %x1
+    %calltmp = call i32 (i8*, ...) @printf(i8* %arraytmp4, i32 %0)
+    ret i32 0
+    }
+
+    define i32 @add(i32 %a, i32 %b) {
+    entry:
+    %b2 = alloca i32
+    %a1 = alloca i32
+    store i32 %a, i32* %a1
+    store i32 %b, i32* %b2
+    %0 = load i32, i32* %a1
+    %1 = load i32, i32* %b2
+    %addtmp = add i32 %0, %1
+    ret i32 %addtmp
+    }
+
+    define i32 @main() {
+    entry:
+    %a = alloca i32
+    %b = alloca i32
+    %calltmp = call i32 @readInt()
+    store i32 %calltmp, i32* %a
+    %calltmp1 = call i32 @readInt()
+    store i32 %calltmp1, i32* %b
+    %0 = load i32, i32* %a
+    %1 = load i32, i32* %b
+    %calltmp2 = call i32 @add(i32 %0, i32 %1)
+    %calltmp3 = call i32 @printInt(i32 %calltmp2)
+    %calltmp4 = call i32 @putchar(i32 10)
+    ret i32 undef
+    }
+    ```
+4. 运行结果
+
+    ![image/test82.png](image/test82.png)
+
+### 递归函数
+
+1. 测试代码
+    ```c
+    int putchar(int a);
+    int printf(char[] pattern,...);
+    int scanf(char[] pattern,...);
+    int readInt(){
+        char[5] p;
+        int[1] scanfRes;
+        p[0] = 37;
+        p[1] = 100;
+        p[2] = 0; 
+        scanf(p,scanfRes);
+        return scanfRes[0];
+    }
+    int printInt(int x) {
+        char[5] p;
+        p[0] = 37;
+        p[1] = 100;
+        p[2] = 0;
+        printf(p,x);
+        return 0;
+    }
+
+    int f(int n) {
+        if(n==0) return 1;
+        return n*f(n-1);
+    }
+
+    int main()
+    {
+        int a, b;
+        a = readInt();
+        printInt(f(a));
+        putchar(10);
+    }
+    ```
+
+2. AST
+
+    ![image/test91.png](image/test91.png)
+
+3. IR
+    ```asm
+    ; ModuleID = 'main'
+    source_filename = "main"
+
+    declare i32 @putchar(i32)
+
+    declare i32 @printf(i8*, ...)
+
+    declare i32 @scanf(i8*, ...)
+
+    define i32 @readInt() {
+    entry:
+    %p = alloca [5 x i8]
+    %scanfRes = alloca [1 x i32]
+    %arraytmp = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+    store i8 37, i8* %arraytmp
+    %arraytmp1 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 1
+    store i8 100, i8* %arraytmp1
+    %arraytmp2 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 2
+    store i8 0, i8* %arraytmp2
+    %arraytmp3 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+    %arraytmp4 = getelementptr [1 x i32], [1 x i32]* %scanfRes, i32 0, i32 0
+    %calltmp = call i32 (i8*, ...) @scanf(i8* %arraytmp3, i32* %arraytmp4)
+    %arraytmp5 = getelementptr [1 x i32], [1 x i32]* %scanfRes, i32 0, i32 0
+    %arrayloadtmp = load i32, i32* %arraytmp5
+    ret i32 %arrayloadtmp
+    }
+
+    define i32 @printInt(i32 %x) {
+    entry:
+    %p = alloca [5 x i8]
+    %x1 = alloca i32
+    store i32 %x, i32* %x1
+    %arraytmp = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+    store i8 37, i8* %arraytmp
+    %arraytmp2 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 1
+    store i8 100, i8* %arraytmp2
+    %arraytmp3 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 2
+    store i8 0, i8* %arraytmp3
+    %arraytmp4 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+    %0 = load i32, i32* %x1
+    %calltmp = call i32 (i8*, ...) @printf(i8* %arraytmp4, i32 %0)
+    ret i32 0
+    }
+
+    define i32 @f(i32 %n) {
+    entry:
+    %n1 = alloca i32
+    store i32 %n, i32* %n1
+    %0 = load i32, i32* %n1
+    %eqtmp = icmp eq i32 %0, 0
+    br i1 %eqtmp, label %then, label %else
+
+    then:                                             ; preds = %entry
+    ret i32 1
+
+    else:                                             ; preds = %entry
+    br label %ifcont
+
+    ifcont:                                           ; preds = %else, <badref>
+    %1 = load i32, i32* %n1
+    %2 = load i32, i32* %n1
+    %subtmp = sub i32 %2, 1
+    %calltmp = call i32 @f(i32 %subtmp)
+    %multmp = mul i32 %1, %calltmp
+    ret i32 %multmp
+    }
+
+    define i32 @main() {
+    entry:
+    %a = alloca i32
+    %b = alloca i32
+    %calltmp = call i32 @readInt()
+    store i32 %calltmp, i32* %a
+    %0 = load i32, i32* %a
+    %calltmp1 = call i32 @f(i32 %0)
+    %calltmp2 = call i32 @printInt(i32 %calltmp1)
+    %calltmp3 = call i32 @putchar(i32 10)
+    ret i32 undef
+    }
+    ```
+4. 运行结果
+
+    ![image/test92.png](image/test92.png)
+
+## 综合测试
+此部分测试样例的AST可视化图和IR代码均过长，不予赘述。
+### 快速排序
+
+1. 测试代码
+
+    见`../test/1.cmm`.
+
+2. 运行结果
+
+    ![image/sort1.png](image/sort1.png)
+    ![image/sort2.png](image/sort2.png)
+    
+3. 测试结果
+
+    ![image/sort3.png](image/sort3.png)
+
+### 矩阵乘法
+
+1. 测试代码
+
+    见`../test/2.cmm`.
+
+2. 运行结果
+
+    ![image/sort1.png](image/mat1.png)
+    ![image/sort2.png](image/mat2.png)
+
+3. 测试结果
+
+    ![image/sort3.png](image/mat3.png)
+
