@@ -32,76 +32,6 @@ flex -o lex.yy.cpp lexical.l
 
 
 
-# 语法说明
-
-本次项目中我们实现了一个c语言的子集，包含的表达式、函数定义、数组、控制流语句等基本功能，同时将数组的语法进行了修改，在该版本的c--语言中，数组的定义方法与Java相似，为形如`int[5] array`的形式
-
-
-$$
-\begin{alignat*}{1}
-    Program     &\rightarrow \space ExtDefList\\
-    ExtDefList  &\rightarrow \space ExtDef  \space ExtDefList\\
-                &\rightarrow \space \epsilon\\
-    ExtDef      &\rightarrow \space  VarDec\\
-                &\rightarrow \space  FunDec\\
-    /* Types*/\\
-    VarType     &\rightarrow \space  TYPE\\
-                &\rightarrow \space  ArrayType\\
-    ArrayType   &\rightarrow \space  VarType \space LB \space INT \space RB\\
-                &\rightarrow \space  VarType \space LB \space RB\\
-    /* Declarations */\\
-    VarDec      &\rightarrow \space  VarType \space VarList \space SEMI\\
-    VarList     &\rightarrow \space  VarInit \space , \space VarList\\
-                &\rightarrow \space  VarInit\\
-    VarInit     &\rightarrow \space  ID\\
-                &\rightarrow \space  ID \space = \space Exp\\
-    FunDec      &\rightarrow \space VarType \space ID \space ( \space ArgList \space ) \space SEMI\\
-                &\rightarrow \space VarType \space ID \space ( \space ) \space SEMI\\
-                &\rightarrow \space VarType \space ID \space ( .. \space ) \space SEMI\\
-                &\rightarrow \space VarType \space ID \space ( \space ArgList \space , \space ... \space ) \space SEMI\\
-                &\rightarrow \space VarType \space ID \space ( \space ArgList \space ) \space CompStmt\\
-                &\rightarrow \space VarType \space ID \space ( \space ) \space CompStmt\\
-    ArgList     &\rightarrow \space ArgList \space , \space Arg\\
-                &\rightarrow \space Arg\\
-    Arg         &\rightarrow \space VarType \space ID\\
-    /* Statements */\\
-    CompStmt    &\rightarrow \space \{ \space VarDecList \space StmtList \space \}\\
-                &\rightarrow \space error \space \}\\
-    StmtList    &\rightarrow \space Stmt \space StmtList\\
-                &\rightarrow \space \epsilon\\
-    VarDecList  &\rightarrow \space VarDec \space VarDecList\\
-                &\rightarrow \space \epsilon\\
-    Stmt        &\rightarrow \space Exp \space SEMI\\
-                &\rightarrow \space CompStmt\\
-                &\rightarrow \space RETURN \space Exp \space SEMI\\
-                &\rightarrow \space IF \space ( \space Exp \space ) \space Stmt\\
-                &\rightarrow \space IF \space ( \space Exp \space ) \space Stmt \space ELSE \space Stmt\\
-                &\rightarrow \space WHILE \space ( \space Exp \space ) \space Stmt\\
-                &\rightarrow \space error \space SEMI\\
-    /* Expressions */\\
-    Exp         &\rightarrow \space Exp \space = \space Exp\\
-                &\rightarrow \space Exp \space \&\& \space Exp\\
-                &\rightarrow \space Exp \space || \space Exp\\
-                &\rightarrow \space Exp \space RELOP \space Exp\\
-                &\rightarrow \space Exp \space + \space Exp\\
-                &\rightarrow \space Exp \space - \space Exp\\
-                &\rightarrow \space Exp \space * \space Exp\\
-                &\rightarrow \space Exp \space \backslash \space Exp\\
-                &\rightarrow \space ( \space Exp \space )\\
-                &\rightarrow \space - \space Exp\\
-                &\rightarrow \space ! \space Exp\\
-                &\rightarrow \space ID \space ( \space Args \space )\\
-                &\rightarrow \space ID \space ( \space )\\
-                &\rightarrow \space Exp \space LB \space Exp \space RB\\
-                &\rightarrow \space ID\\
-                &\rightarrow \space INT\\
-                &\rightarrow \space FLOAT\\
-    Args        &\rightarrow \space Exp \space , \space Args\\
-                &\rightarrow \space Exp\\
-    \end{alignat*}
-$$
-
-
 # syntax模块
 
 
@@ -1091,6 +1021,9 @@ llvm::Value* CallFuncExpr::CodeGen(CodeGenContext& context){
 ```
 
 # 如何使用本项目
+
+## 说明
+
 简易的上手教程在readme.md中
 
 本项目后端的代码生成由llvm完成，同时本项目为一个c语言子集的编译器，不涉及链接功能，因此链接部分由ld或者lld完成。
@@ -1098,40 +1031,59 @@ llvm::Value* CallFuncExpr::CodeGen(CodeGenContext& context){
 当然也可以直接使用llc将IR编译为汇编后使用as进行汇编，并使用ld手动链接所需要的运行时c库
 已经将三种不同的方式的脚本放在了script文件夹中
 
+## 具体使用案例
+
+进入文件夹 `src`
+使用`make`命令编译编译器的可执行文件：cmmc (C Minus Mnius Compiler) 
+该文件是一个IR生成器，后续需要基于llvm的进一步工作以及链接产生可执行文件
+我们可以使用`scripts`中的脚本，比如`cmmc-llc-as-ld.sh`来构建可执行文件
+
+```bash
+bash ../scripts/cmmc-llc-as-ld.sh ../test/1.cmm b.out
+# or
+bash ../scripts/cmmc-clang.sh ../test/1.cmm c.out
+```
+上面的命令是将`../test/1.cmm`这一个"c--"源代码文件, 编译为`b.out`的可执行文件的代码
+
+然后就可以使用如下命令使用tester进行测试
+```bash
+../test/quicksort-linux-amd64 ./b.out
+```
+
 # 测试案例
 
 ## 数据类型测试
 
 ### 基本类型测试
 1. 测试代码
-    ```c
-    int main()
-    {
-        int a=100;
-        float b=0.0;
-        int c;
-        c = -2;
-    }
-    ```
+```c
+int main()
+{
+    int a=100;
+    float b=0.0;
+    int c;
+    c = -2;
+}
+```
 2. AST
     ![image/test11.png](image/test11.png)
 
 3. IR
-    ```asm
-    ; ModuleID = 'main'
-    source_filename = "main"
-    
-    define i32 @main() {
-    entry:
-    %a = alloca i32
-    %b = alloca float
-    %c = alloca i32
-    store float 0.000000e+00, float* %b
-    store i32 100, i32* %a
-    store i32 -2, i32* %c
-    ret i32 undef
-    }
-    ```
+```asm
+; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+%a = alloca i32
+%b = alloca float
+%c = alloca i32
+store float 0.000000e+00, float* %b
+store i32 100, i32* %a
+store i32 -2, i32* %c
+ret i32 undef
+}
+```
 
 4. 运行结果(添加输出)
 
@@ -1139,35 +1091,36 @@ llvm::Value* CallFuncExpr::CodeGen(CodeGenContext& context){
 
 ### 数组类型测试
 1. 测试代码
-    ```c
-    int main()
-    {
-        int[3][2] a;
-        float[2] b;
-        a[2][1] = 5;
-        b[1] = 0.0;
-    }
-    ```
+```c
+int main()
+{
+    int[3][2] a;
+    float[2] b;
+    a[2][1] = 5;
+    b[1] = 0.0;
+}
+```
 2. AST
+
     ![image/test21.png](image/test21.png)
 
 3. IR
-    ```asm
-    ; ModuleID = 'main'
-    source_filename = "main"
-    
-    define i32 @main() {
-    entry:
-    %a = alloca [2 x [3 x i32]]
-    %b = alloca [2 x float]
-    %arraytmp = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %a, i32 0, i32 2
-    %arraytmp1 = getelementptr [3 x i32], [3 x i32]* %arraytmp, i32 0, i32 1
-    store i32 5, i32* %arraytmp1
-    %arraytmp2 = getelementptr [2 x float], [2 x float]* %b, i32 0, i32 1
-    store float 0.000000e+00, float* %arraytmp2
-    ret i32 undef
-    }
-    ```
+```asm
+; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+%a = alloca [2 x [3 x i32]]
+%b = alloca [2 x float]
+%arraytmp = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %a, i32 0, i32 2
+%arraytmp1 = getelementptr [3 x i32], [3 x i32]* %arraytmp, i32 0, i32 1
+store i32 5, i32* %arraytmp1
+%arraytmp2 = getelementptr [2 x float], [2 x float]* %b, i32 0, i32 1
+store float 0.000000e+00, float* %arraytmp2
+ret i32 undef
+}
+```
 
 4. 运行结果(添加输出)
 
@@ -1176,92 +1129,92 @@ llvm::Value* CallFuncExpr::CodeGen(CodeGenContext& context){
 
 ### 类型转换测试
 1. 测试代码
-    ```c
-    int main()
-    {
-        float b=5.5;
-        int c=0;
-        b = c;
-    }
-    ```
+```c
+int main()
+{
+    float b=5.5;
+    int c=0;
+    b = c;
+}
+```
 2. AST
 
     ![image/test31.png](image/test31.png)
 
 3. IR
-    ```asm
-    ; ModuleID = 'main'
-    source_filename = "main"
-    
-    define i32 @main() {
-    entry:
-    %b = alloca float
-    %c = alloca i32
-    store i32 0, i32* %c
-    store float 5.500000e+00, float* %b
-    %0 = load i32, i32* %c
-    %1 = bitcast i32 %0 to float
-    store float %1, float* %b
-    ret i32 undef
-    }
-    ```
+```asm
+; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+%b = alloca float
+%c = alloca i32
+store i32 0, i32* %c
+store float 5.500000e+00, float* %b
+%0 = load i32, i32* %c
+%1 = bitcast i32 %0 to float
+store float %1, float* %b
+ret i32 undef
+}
+```
 4. 运行结果(添加输出)
 
     ![image/test32.png](image/test32.png)
 
 ## 表达式测试
 1. 测试代码
-    ```c
-    int main()
-    {
-        int[3] a;
-        int b, c;
-        a[0] = 1;
-        b=2;
-        a[1] = b/2+5;
-        c=-b;
-        b = c+b;
-        a[2] = a[1] * c;
-    }
-    ```
+```c
+int main()
+{
+    int[3] a;
+    int b, c;
+    a[0] = 1;
+    b=2;
+    a[1] = b/2+5;
+    c=-b;
+    b = c+b;
+    a[2] = a[1] * c;
+}
+```
 2. AST
 
     ![image/test41.png](image/test41.png)
 
 3. IR
-    ```asm
-    ; ModuleID = 'main'
-    source_filename = "main"
-    
-    define i32 @main() {
-    entry:
-    %a = alloca [3 x i32]
-    %b = alloca i32
-    %c = alloca i32
-    %arraytmp = getelementptr [3 x i32], [3 x i32]* %a, i32 0, i32 0
-    store i32 1, i32* %arraytmp
-    store i32 2, i32* %b
-    %arraytmp1 = getelementptr [3 x i32], [3 x i32]* %a, i32 0, i32 1
-    %0 = load i32, i32* %b
-    %divtmp = sdiv i32 %0, 2
-    %addtmp = add i32 %divtmp, 5
-    store i32 %addtmp, i32* %arraytmp1
-    %1 = load i32, i32* %b
-    %negtmp = sub i32 0, %1
-    store i32 %negtmp, i32* %c
-    %2 = load i32, i32* %c
-    %3 = load i32, i32* %b
-    %addtmp2 = add i32 %2, %3
-    store i32 %addtmp2, i32* %b
-    %arraytmp3 = getelementptr [3 x i32], [3 x i32]* %a, i32 0, i32 2
-    %arraytmp4 = getelementptr [3 x i32], [3 x i32]* %a, i32 0, i32 1
-    %arrayloadtmp = load i32, i32* %arraytmp4
-    %4 = load i32, i32* %c
-    %multmp = mul i32 %arrayloadtmp, %4
-    store i32 %multmp, i32* %arraytmp3
-    ret i32 undef
-    }
-    ```
+```asm
+; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+%a = alloca [3 x i32]
+%b = alloca i32
+%c = alloca i32
+%arraytmp = getelementptr [3 x i32], [3 x i32]* %a, i32 0, i32 0
+store i32 1, i32* %arraytmp
+store i32 2, i32* %b
+%arraytmp1 = getelementptr [3 x i32], [3 x i32]* %a, i32 0, i32 1
+%0 = load i32, i32* %b
+%divtmp = sdiv i32 %0, 2
+%addtmp = add i32 %divtmp, 5
+store i32 %addtmp, i32* %arraytmp1
+%1 = load i32, i32* %b
+%negtmp = sub i32 0, %1
+store i32 %negtmp, i32* %c
+%2 = load i32, i32* %c
+%3 = load i32, i32* %b
+%addtmp2 = add i32 %2, %3
+store i32 %addtmp2, i32* %b
+%arraytmp3 = getelementptr [3 x i32], [3 x i32]* %a, i32 0, i32 2
+%arraytmp4 = getelementptr [3 x i32], [3 x i32]* %a, i32 0, i32 1
+%arrayloadtmp = load i32, i32* %arraytmp4
+%4 = load i32, i32* %c
+%multmp = mul i32 %arrayloadtmp, %4
+store i32 %multmp, i32* %arraytmp3
+ret i32 undef
+}
+```
 
 4. 运行结果(添加输出)
 
@@ -1271,112 +1224,112 @@ llvm::Value* CallFuncExpr::CodeGen(CodeGenContext& context){
 
 ### If语句测试
 1. 测试代码
-    ```c
-    int main()
-    {
-        int a = 54;
-        int flag;
-        if(a<10) flag = 1;
-        else flag = 0;
-        return 0;
-    }
-    ```
+```c
+int main()
+{
+    int a = 54;
+    int flag;
+    if(a<10) flag = 1;
+    else flag = 0;
+    return 0;
+}
+```
 
 2. AST
 
     ![image/test51.png](image/test51.png)
 
 3. IR
-    ```asm
-    ; ModuleID = 'main'
-    source_filename = "main"
-    
-    define i32 @main() {
-    entry:
-    %a = alloca i32
-    %flag = alloca i32
-    store i32 54, i32* %a
-    %0 = load i32, i32* %a
-    %lttmp = icmp slt i32 %0, 10
-    br i1 %lttmp, label %then, label %else
-    
-    then:                                             ; preds = %entry
-    store i32 1, i32* %flag
-    br label %ifcont
-    
-    else:                                             ; preds = %entry
-    br label %ifcont
-    
-    ifcont:                                           ; preds = %else, %then
-    ret i32 0
-    }
-    ```
+```asm
+; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+%a = alloca i32
+%flag = alloca i32
+store i32 54, i32* %a
+%0 = load i32, i32* %a
+%lttmp = icmp slt i32 %0, 10
+br i1 %lttmp, label %then, label %else
+
+then:                                             ; preds = %entry
+store i32 1, i32* %flag
+br label %ifcont
+
+else:                                             ; preds = %entry
+br label %ifcont
+
+ifcont:                                           ; preds = %else, %then
+ret i32 0
+}
+```
 
 ### While语句测试
 1. 测试代码
-    ```c
-    int main()
-    {
-        int a = 54, cnt = 0;
-        while(a>0) {
-            cnt = cnt+1;
-            a = a/2;
-        }
-        return 0;
+```c
+int main()
+{
+    int a = 54, cnt = 0;
+    while(a>0) {
+        cnt = cnt+1;
+        a = a/2;
     }
-    ```
+    return 0;
+}
+```
 
 2. AST
 
     ![image/test61.png](image/test61.png)
 
 3. IR
-    ```asm
-    ; ModuleID = 'main'
-    source_filename = "main"
-    
-    define i32 @main() {
-    entry:
-    %a = alloca i32
-    %cnt = alloca i32
-    store i32 0, i32* %cnt
-    store i32 54, i32* %a
-    br label %whilecond
-    
-    whilecond:                                        ; preds = %whilebody, %entry
-    %0 = load i32, i32* %a
-    %gttmp = icmp sgt i32 %0, 0
-    br i1 %gttmp, label %whilebody, label %whilecont
-    
-    whilebody:                                        ; preds = %whilecond
-    %1 = load i32, i32* %cnt
-    %addtmp = add i32 %1, 1
-    store i32 %addtmp, i32* %cnt
-    %2 = load i32, i32* %a
-    %divtmp = sdiv i32 %2, 2
-    store i32 %divtmp, i32* %a
-    br label %whilecond
-    
-    whilecont:                                        ; preds = %whilecond
-    ret i32 0
-    }
-    ```
+```asm
+; ModuleID = 'main'
+source_filename = "main"
+
+define i32 @main() {
+entry:
+%a = alloca i32
+%cnt = alloca i32
+store i32 0, i32* %cnt
+store i32 54, i32* %a
+br label %whilecond
+
+whilecond:                                        ; preds = %whilebody, %entry
+%0 = load i32, i32* %a
+%gttmp = icmp sgt i32 %0, 0
+br i1 %gttmp, label %whilebody, label %whilecont
+
+whilebody:                                        ; preds = %whilecond
+%1 = load i32, i32* %cnt
+%addtmp = add i32 %1, 1
+store i32 %addtmp, i32* %cnt
+%2 = load i32, i32* %a
+%divtmp = sdiv i32 %2, 2
+store i32 %divtmp, i32* %a
+br label %whilecond
+
+whilecont:                                        ; preds = %whilecond
+ret i32 0
+}
+```
 
 ### Return语句测试
 1. 测试代码
-    ```c
+```c
     int main()
     {
         return 0;
     }
-    ```
+```
 
 2. AST
 
     ![image/test71.png](image/test71.png)
 
 3. IR
-    ```asm
+```asm
     ; ModuleID = 'main'
     source_filename = "main"
     
@@ -1384,126 +1337,126 @@ llvm::Value* CallFuncExpr::CodeGen(CodeGenContext& context){
     entry:
     ret i32 0
     }
-    ```
+```
 
 ## 函数测试
 
 ### 简单函数
 1. 测试代码
-    ```c
-    int putchar(int a);
-    int printf(char[] pattern,...);
-    int scanf(char[] pattern,...);
-    int readInt(){
-        char[5] p;
-        int[1] scanfRes;
-        p[0] = 37;
-        p[1] = 100;
-        p[2] = 0; 
-        scanf(p,scanfRes);
-        return scanfRes[0];
-    }
-    int printInt(int x) {
-        char[5] p;
-        p[0] = 37;
-        p[1] = 100;
-        p[2] = 0;
-        printf(p,x);
-        return 0;
-    }
-    
-    int add(int a, int b) {
-        return a+b;
-    }
-    
-    int main()
-    {
-        int a, b;
-        a = readInt();
-        b = readInt();
-        printInt(add(a,b));
-        putchar(10);
-    }
-    ```
+```c
+int putchar(int a);
+int printf(char[] pattern,...);
+int scanf(char[] pattern,...);
+int readInt(){
+    char[5] p;
+    int[1] scanfRes;
+    p[0] = 37;
+    p[1] = 100;
+    p[2] = 0; 
+    scanf(p,scanfRes);
+    return scanfRes[0];
+}
+int printInt(int x) {
+    char[5] p;
+    p[0] = 37;
+    p[1] = 100;
+    p[2] = 0;
+    printf(p,x);
+    return 0;
+}
+
+int add(int a, int b) {
+    return a+b;
+}
+
+int main()
+{
+    int a, b;
+    a = readInt();
+    b = readInt();
+    printInt(add(a,b));
+    putchar(10);
+}
+```
 
 2. AST
 
     ![image/test81.png](image/test81.png)
 
 3. IR
-    ```asm
-    ; ModuleID = 'main'
-    source_filename = "main"
-    
-    declare i32 @putchar(i32)
-    
-    declare i32 @printf(i8*, ...)
-    
-    declare i32 @scanf(i8*, ...)
-    
-    define i32 @readInt() {
-    entry:
-    %p = alloca [5 x i8]
-    %scanfRes = alloca [1 x i32]
-    %arraytmp = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
-    store i8 37, i8* %arraytmp
-    %arraytmp1 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 1
-    store i8 100, i8* %arraytmp1
-    %arraytmp2 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 2
-    store i8 0, i8* %arraytmp2
-    %arraytmp3 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
-    %arraytmp4 = getelementptr [1 x i32], [1 x i32]* %scanfRes, i32 0, i32 0
-    %calltmp = call i32 (i8*, ...) @scanf(i8* %arraytmp3, i32* %arraytmp4)
-    %arraytmp5 = getelementptr [1 x i32], [1 x i32]* %scanfRes, i32 0, i32 0
-    %arrayloadtmp = load i32, i32* %arraytmp5
-    ret i32 %arrayloadtmp
-    }
-    
-    define i32 @printInt(i32 %x) {
-    entry:
-    %p = alloca [5 x i8]
-    %x1 = alloca i32
-    store i32 %x, i32* %x1
-    %arraytmp = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
-    store i8 37, i8* %arraytmp
-    %arraytmp2 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 1
-    store i8 100, i8* %arraytmp2
-    %arraytmp3 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 2
-    store i8 0, i8* %arraytmp3
-    %arraytmp4 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
-    %0 = load i32, i32* %x1
-    %calltmp = call i32 (i8*, ...) @printf(i8* %arraytmp4, i32 %0)
-    ret i32 0
-    }
-    
-    define i32 @add(i32 %a, i32 %b) {
-    entry:
-    %b2 = alloca i32
-    %a1 = alloca i32
-    store i32 %a, i32* %a1
-    store i32 %b, i32* %b2
-    %0 = load i32, i32* %a1
-    %1 = load i32, i32* %b2
-    %addtmp = add i32 %0, %1
-    ret i32 %addtmp
-    }
-    
-    define i32 @main() {
-    entry:
-    %a = alloca i32
-    %b = alloca i32
-    %calltmp = call i32 @readInt()
-    store i32 %calltmp, i32* %a
-    %calltmp1 = call i32 @readInt()
-    store i32 %calltmp1, i32* %b
-    %0 = load i32, i32* %a
-    %1 = load i32, i32* %b
-    %calltmp2 = call i32 @add(i32 %0, i32 %1)
-    %calltmp3 = call i32 @printInt(i32 %calltmp2)
-    %calltmp4 = call i32 @putchar(i32 10)
-    ret i32 undef
-    }
-    ```
+```asm
+; ModuleID = 'main'
+source_filename = "main"
+
+declare i32 @putchar(i32)
+
+declare i32 @printf(i8*, ...)
+
+declare i32 @scanf(i8*, ...)
+
+define i32 @readInt() {
+entry:
+%p = alloca [5 x i8]
+%scanfRes = alloca [1 x i32]
+%arraytmp = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+store i8 37, i8* %arraytmp
+%arraytmp1 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 1
+store i8 100, i8* %arraytmp1
+%arraytmp2 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 2
+store i8 0, i8* %arraytmp2
+%arraytmp3 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+%arraytmp4 = getelementptr [1 x i32], [1 x i32]* %scanfRes, i32 0, i32 0
+%calltmp = call i32 (i8*, ...) @scanf(i8* %arraytmp3, i32* %arraytmp4)
+%arraytmp5 = getelementptr [1 x i32], [1 x i32]* %scanfRes, i32 0, i32 0
+%arrayloadtmp = load i32, i32* %arraytmp5
+ret i32 %arrayloadtmp
+}
+
+define i32 @printInt(i32 %x) {
+entry:
+%p = alloca [5 x i8]
+%x1 = alloca i32
+store i32 %x, i32* %x1
+%arraytmp = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+store i8 37, i8* %arraytmp
+%arraytmp2 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 1
+store i8 100, i8* %arraytmp2
+%arraytmp3 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 2
+store i8 0, i8* %arraytmp3
+%arraytmp4 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+%0 = load i32, i32* %x1
+%calltmp = call i32 (i8*, ...) @printf(i8* %arraytmp4, i32 %0)
+ret i32 0
+}
+
+define i32 @add(i32 %a, i32 %b) {
+entry:
+%b2 = alloca i32
+%a1 = alloca i32
+store i32 %a, i32* %a1
+store i32 %b, i32* %b2
+%0 = load i32, i32* %a1
+%1 = load i32, i32* %b2
+%addtmp = add i32 %0, %1
+ret i32 %addtmp
+}
+
+define i32 @main() {
+entry:
+%a = alloca i32
+%b = alloca i32
+%calltmp = call i32 @readInt()
+store i32 %calltmp, i32* %a
+%calltmp1 = call i32 @readInt()
+store i32 %calltmp1, i32* %b
+%0 = load i32, i32* %a
+%1 = load i32, i32* %b
+%calltmp2 = call i32 @add(i32 %0, i32 %1)
+%calltmp3 = call i32 @printInt(i32 %calltmp2)
+%calltmp4 = call i32 @putchar(i32 10)
+ret i32 undef
+}
+```
 4. 运行结果
 
     ![image/test82.png](image/test82.png)
@@ -1511,128 +1464,128 @@ llvm::Value* CallFuncExpr::CodeGen(CodeGenContext& context){
 ### 递归函数
 
 1. 测试代码
-    ```c
-    int putchar(int a);
-    int printf(char[] pattern,...);
-    int scanf(char[] pattern,...);
-    int readInt(){
-        char[5] p;
-        int[1] scanfRes;
-        p[0] = 37;
-        p[1] = 100;
-        p[2] = 0; 
-        scanf(p,scanfRes);
-        return scanfRes[0];
-    }
-    int printInt(int x) {
-        char[5] p;
-        p[0] = 37;
-        p[1] = 100;
-        p[2] = 0;
-        printf(p,x);
-        return 0;
-    }
-    
-    int f(int n) {
-        if(n==0) return 1;
-        return n*f(n-1);
-    }
-    
-    int main()
-    {
-        int a, b;
-        a = readInt();
-        printInt(f(a));
-        putchar(10);
-    }
-    ```
+```c
+int putchar(int a);
+int printf(char[] pattern,...);
+int scanf(char[] pattern,...);
+int readInt(){
+    char[5] p;
+    int[1] scanfRes;
+    p[0] = 37;
+    p[1] = 100;
+    p[2] = 0; 
+    scanf(p,scanfRes);
+    return scanfRes[0];
+}
+int printInt(int x) {
+    char[5] p;
+    p[0] = 37;
+    p[1] = 100;
+    p[2] = 0;
+    printf(p,x);
+    return 0;
+}
+
+int f(int n) {
+    if(n==0) return 1;
+    return n*f(n-1);
+}
+
+int main()
+{
+    int a, b;
+    a = readInt();
+    printInt(f(a));
+    putchar(10);
+}
+```
 
 2. AST
 
     ![image/test91.png](image/test91.png)
 
 3. IR
-    ```asm
-    ; ModuleID = 'main'
-    source_filename = "main"
-    
-    declare i32 @putchar(i32)
-    
-    declare i32 @printf(i8*, ...)
-    
-    declare i32 @scanf(i8*, ...)
-    
-    define i32 @readInt() {
-    entry:
-    %p = alloca [5 x i8]
-    %scanfRes = alloca [1 x i32]
-    %arraytmp = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
-    store i8 37, i8* %arraytmp
-    %arraytmp1 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 1
-    store i8 100, i8* %arraytmp1
-    %arraytmp2 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 2
-    store i8 0, i8* %arraytmp2
-    %arraytmp3 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
-    %arraytmp4 = getelementptr [1 x i32], [1 x i32]* %scanfRes, i32 0, i32 0
-    %calltmp = call i32 (i8*, ...) @scanf(i8* %arraytmp3, i32* %arraytmp4)
-    %arraytmp5 = getelementptr [1 x i32], [1 x i32]* %scanfRes, i32 0, i32 0
-    %arrayloadtmp = load i32, i32* %arraytmp5
-    ret i32 %arrayloadtmp
-    }
-    
-    define i32 @printInt(i32 %x) {
-    entry:
-    %p = alloca [5 x i8]
-    %x1 = alloca i32
-    store i32 %x, i32* %x1
-    %arraytmp = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
-    store i8 37, i8* %arraytmp
-    %arraytmp2 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 1
-    store i8 100, i8* %arraytmp2
-    %arraytmp3 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 2
-    store i8 0, i8* %arraytmp3
-    %arraytmp4 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
-    %0 = load i32, i32* %x1
-    %calltmp = call i32 (i8*, ...) @printf(i8* %arraytmp4, i32 %0)
-    ret i32 0
-    }
-    
-    define i32 @f(i32 %n) {
-    entry:
-    %n1 = alloca i32
-    store i32 %n, i32* %n1
-    %0 = load i32, i32* %n1
-    %eqtmp = icmp eq i32 %0, 0
-    br i1 %eqtmp, label %then, label %else
-    
-    then:                                             ; preds = %entry
-    ret i32 1
-    
-    else:                                             ; preds = %entry
-    br label %ifcont
-    
-    ifcont:                                           ; preds = %else, <badref>
-    %1 = load i32, i32* %n1
-    %2 = load i32, i32* %n1
-    %subtmp = sub i32 %2, 1
-    %calltmp = call i32 @f(i32 %subtmp)
-    %multmp = mul i32 %1, %calltmp
-    ret i32 %multmp
-    }
-    
-    define i32 @main() {
-    entry:
-    %a = alloca i32
-    %b = alloca i32
-    %calltmp = call i32 @readInt()
-    store i32 %calltmp, i32* %a
-    %0 = load i32, i32* %a
-    %calltmp1 = call i32 @f(i32 %0)
-    %calltmp2 = call i32 @printInt(i32 %calltmp1)
-    %calltmp3 = call i32 @putchar(i32 10)
-    ret i32 undef
-    }
-    ```
+```asm
+; ModuleID = 'main'
+source_filename = "main"
+
+declare i32 @putchar(i32)
+
+declare i32 @printf(i8*, ...)
+
+declare i32 @scanf(i8*, ...)
+
+define i32 @readInt() {
+entry:
+%p = alloca [5 x i8]
+%scanfRes = alloca [1 x i32]
+%arraytmp = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+store i8 37, i8* %arraytmp
+%arraytmp1 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 1
+store i8 100, i8* %arraytmp1
+%arraytmp2 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 2
+store i8 0, i8* %arraytmp2
+%arraytmp3 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+%arraytmp4 = getelementptr [1 x i32], [1 x i32]* %scanfRes, i32 0, i32 0
+%calltmp = call i32 (i8*, ...) @scanf(i8* %arraytmp3, i32* %arraytmp4)
+%arraytmp5 = getelementptr [1 x i32], [1 x i32]* %scanfRes, i32 0, i32 0
+%arrayloadtmp = load i32, i32* %arraytmp5
+ret i32 %arrayloadtmp
+}
+
+define i32 @printInt(i32 %x) {
+entry:
+%p = alloca [5 x i8]
+%x1 = alloca i32
+store i32 %x, i32* %x1
+%arraytmp = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+store i8 37, i8* %arraytmp
+%arraytmp2 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 1
+store i8 100, i8* %arraytmp2
+%arraytmp3 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 2
+store i8 0, i8* %arraytmp3
+%arraytmp4 = getelementptr [5 x i8], [5 x i8]* %p, i32 0, i32 0
+%0 = load i32, i32* %x1
+%calltmp = call i32 (i8*, ...) @printf(i8* %arraytmp4, i32 %0)
+ret i32 0
+}
+
+define i32 @f(i32 %n) {
+entry:
+%n1 = alloca i32
+store i32 %n, i32* %n1
+%0 = load i32, i32* %n1
+%eqtmp = icmp eq i32 %0, 0
+br i1 %eqtmp, label %then, label %else
+
+then:                                             ; preds = %entry
+ret i32 1
+
+else:                                             ; preds = %entry
+br label %ifcont
+
+ifcont:                                           ; preds = %else, <badref>
+%1 = load i32, i32* %n1
+%2 = load i32, i32* %n1
+%subtmp = sub i32 %2, 1
+%calltmp = call i32 @f(i32 %subtmp)
+%multmp = mul i32 %1, %calltmp
+ret i32 %multmp
+}
+
+define i32 @main() {
+entry:
+%a = alloca i32
+%b = alloca i32
+%calltmp = call i32 @readInt()
+store i32 %calltmp, i32* %a
+%0 = load i32, i32* %a
+%calltmp1 = call i32 @f(i32 %0)
+%calltmp2 = call i32 @printInt(i32 %calltmp1)
+%calltmp3 = call i32 @putchar(i32 10)
+ret i32 undef
+}
+```
 4. 运行结果
 
     ![image/test92.png](image/test92.png)
