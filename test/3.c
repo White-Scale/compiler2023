@@ -12,30 +12,30 @@ void read(char input[]){
     }
     input[index] = '\0';
 }
-int getName(char input[], char name[], int index){
-    while(input[index] != '|')
-    {
-        name[index] = input[index];
-        index = index + 1;
-    }
-    name[index] = '\0';
-    index = index + 1;  //escape '|'
-    return index;
-}
-int compareString(char str1[], char str2[]){
-    int index = 0;
-    while(str1[index] != '\0')
-    {
-        if(str2[index] == '\0')
-            return 0;
-        if(str2[index] != str1[index])
-            return 0;
-        index = index + 1;
-    }
-    if(str2[index] == '\0')
-        return 1;
-    else return 0;
-}
+// int getName(char input[], char name[], int index){
+//     while(input[index] != '|')
+//     {
+//         name[index] = input[index];
+//         index = index + 1;
+//     }
+//     name[index] = '\0';
+//     index = index + 1;  //escape '|'
+//     return index;
+// }
+// int compareString(char str1[], char str2[]){
+//     int index = 0;
+//     while(str1[index] != '\0')
+//     {
+//         if(str2[index] == '\0')
+//             return 0;
+//         if(str2[index] != str1[index])
+//             return 0;
+//         index = index + 1;
+//     }
+//     if(str2[index] == '\0')
+//         return 1;
+//     else return 0;
+// }
 int main(){
     char classList[101][5];
     float credit;
@@ -65,7 +65,17 @@ int main(){
     while (input[0] != '\0'){   //还有新课
         //开始针对培养方案中某一门课进行处理
         int index = 0;
-        index = getName(input, classList[thisClass], index);
+        //getName
+        // index = getName(input, classList[thisClass], index);
+        {
+            while(input[index] != '|')
+            {
+                classList[thisClass][index] = input[index];
+                index = index + 1;
+            }
+            classList[thisClass][index] = '\0';
+            index = index + 1;  //escape '|'
+        }
         credit = input[index] - '0';
         index = index + 2;  //escape credit and '|'
         char tempClass[5];    
@@ -156,6 +166,7 @@ int main(){
         GPA1 = GPA1 + 1;
     }
     printf("GPA: %d.%d\n", GPA1, GPA2);
+    // printf("GPA: %f\n", GPA);
     printf("Hours Attempted: %d\n", attemptCredits);
     printf("Hours Completed: %d\n", completedCredits);
     printf("Credits Remaining: %d\n", remainingCredits);
@@ -172,7 +183,23 @@ int main(){
         {
             int take = 0;
             while(hasTake == 0 && take < completeCount){
-                hasTake = compareString(classList[count], completeClass[take]); //判断该课是否已修
+                //compareString
+                {
+                    int index = 0;
+                    int finalResult = 1;
+                    while(finalResult == 1 && classList[count][index] != '\0')
+                    {
+                        if(completeClass[take][index] == '\0') //length2 < length1
+                            finalResult = 0;
+                        if(completeClass[take][index] != classList[count][index])  //2 != 1
+                            finalResult = 0;
+                        index = index + 1;
+                    }
+                    if (completeClass[take][index] != '\0') //langth1 < length2
+                        finalResult = 0;
+                    hasTake = finalResult;  //return finalResult to hasTake
+                }
+                // hasTake = compareString(classList[count], completeClass[take]); //判断该课是否已修
                 // if(hasTake == 1){
                     // break;  //该课已修
                 // }
@@ -193,7 +220,23 @@ int main(){
                     int i = 0;
                     int takeThis = 0;
                     while(takeThis == 0 && i < completeCount){   //遍历已修课程列表
-                        takeThis = compareString(classes[count][lane][judgeClassIndex], completeClass[i]);
+                        //compareString
+                        {
+                            int index = 0;
+                            int finalResult = 1;
+                            while(finalResult == 1 && classes[count][lane][judgeClassIndex][index] != '\0')
+                            {
+                                if(completeClass[i][index] == '\0') //length2 < length1
+                                    finalResult = 0;
+                                if(completeClass[i][index] != classes[count][lane][judgeClassIndex][index])  //2 != 1
+                                    finalResult = 0;
+                                index = index + 1;
+                            }
+                            if (completeClass[i][index] != '\0') //langth1 < length2
+                                finalResult = 0;
+                            takeThis = finalResult;  //return finalResult to hasTake
+                        }
+                        // takeThis = compareString(classes[count][lane][judgeClassIndex], completeClass[i]);
                         // if(takeThis == 1)   //该课已修
                             // break;
                         i = i + 1;
