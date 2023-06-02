@@ -1,5 +1,5 @@
 #include <stdio.h>
-void read(char input[]){
+void read(char* input){
     char c;
     scanf("%c", &c);
     int index = 0;
@@ -12,7 +12,7 @@ void read(char input[]){
     }
     input[index] = '\0';
 }
-int getName(char input[], char name[], int index){
+int getName(char* input, char* name, int index){
     while(input[index] != '|')
     {
         name[index] = input[index];
@@ -22,7 +22,7 @@ int getName(char input[], char name[], int index){
     index = index + 1;  //escape '|'
     return index;
 }
-int compareString(char str1[], char str2[]){
+int compareString(char* str1, char* str2){
     int index = 0;
     while(str1[index] != '\0')
     {
@@ -39,18 +39,26 @@ int compareString(char str1[], char str2[]){
 int main(){
     char classList[101][5];
     float credit;
-    char classes[101][7][7][5]; //[w][x][y][z]:w门课，每门有x组前置课，每组y门，每门课名字数组为z
-    char grade;
+    char classes[101][8][8][5]; //[w][x][y][z]:w门课，每门有x组前置课，每组y门，每门课名字数组为z
     float totalGrade = 0;
     int attemptCredits = 0;
     int completedCredits = 0;
     int remainingCredits = 0;
     // char recommed[100][5];
-    char input[200];
+    char input[500];
     char completeClass[101][5]; //[x][y]:x门已修课的课名
     int thisClass = 0;      //所有课程数量
     int completeCount = 0;  //已修课程数量
     int preLanes[101];  //每门课有多少条前置路径
+
+    {
+        int i = 0;
+        while(i < 101)
+        {
+            i = i + 1;
+            preLanes[i] = 0;
+        }
+    }
 
     read(input);
 
@@ -72,6 +80,7 @@ int main(){
             if(input[index] == ';') //将有一条新的前置路线
             {
                 classes[thisClass][lane][class][charCount] = '\0';  //为该条线路最后一课封口
+                classes[thisClass][lane][class+1][0] = '\0';    //该条路线下没有下一节课了
                 lane = lane + 1;
                 class = 0;
                 charCount = 0;
@@ -88,8 +97,10 @@ int main(){
             }
             index = index + 1;  //读取下一个字符
         }
+        classes[thisClass][lane][class][charCount] = '\0';  //为最后一条线路最后一课封口
+        classes[thisClass][lane][class+1][0] = '\0';    //该条路线下没有下一节课了
         preLanes[thisClass] = lane + hasLane;
-        classes[thisClass][lane][class][charCount] = '\0';  //没有下一条路线了
+        classes[thisClass][lane+hasLane][class][charCount] = '\0';  //没有下一条路线了
 
         index = index + 1;  //escapa '|'
         if(input[index] != '\0')    //这门课有分，且及格
@@ -105,6 +116,7 @@ int main(){
                     completeClass[completeCount][t] = classList[thisClass][t]; //复制当前课程
                     t = t + 1; 
                 }
+                completeClass[completeCount][t] = '\0';
                 completedCredits = completedCredits + credit;
                 if(input[index] == 'A')
                     totalGrade = totalGrade + 4.0 * credit;
@@ -134,13 +146,13 @@ int main(){
     else
         GPA = totalGrade / attemptCredits;
     printf("GPA: %.1f\n", GPA);
-    printf("Hours Attempts: %d\n", attemptCredits);
+    printf("Hours Attempted: %d\n", attemptCredits);
     printf("Hours Completed: %d\n", completedCredits);
     printf("Credits Remaining: %d\n", remainingCredits);
     printf("\n");
     printf("Possible Courses to Take Next\n");
     if(remainingCredits == 0){
-        printf("  None - Congratulations!");
+        printf("  None - Congratulations!\n");
     }
     int count = 0;
     while (count < thisClass){
