@@ -1,5 +1,5 @@
 #include <stdio.h>
-void read(char* input){
+void read(char input[]){
     char c;
     scanf("%c", &c);
     int index = 0;
@@ -12,7 +12,7 @@ void read(char* input){
     }
     input[index] = '\0';
 }
-int getName(char* input, char* name, int index){
+int getName(char input[], char name[], int index){
     while(input[index] != '|')
     {
         name[index] = input[index];
@@ -22,7 +22,7 @@ int getName(char* input, char* name, int index){
     index = index + 1;  //escape '|'
     return index;
 }
-int compareString(char* str1, char* str2){
+int compareString(char str1[], char str2[]){
     int index = 0;
     while(str1[index] != '\0')
     {
@@ -145,7 +145,17 @@ int main(){
         GPA = 0.0;
     else
         GPA = totalGrade / attemptCredits;
-    printf("GPA: %.1f\n", GPA);
+    int GPA1 = GPA;
+    GPA = GPA * 10 - GPA1 * 10;
+    int GPA2 = GPA;
+    int rem = GPA * 10 - GPA2 * 10;
+    if(rem > 4) GPA2 = GPA2 + 1;
+    if(GPA2 == 10)
+    {
+        GPA2 = 0;
+        GPA1 = GPA1 + 1;
+    }
+    printf("GPA: %d.%d\n", GPA1, GPA2);
     printf("Hours Attempted: %d\n", attemptCredits);
     printf("Hours Completed: %d\n", completedCredits);
     printf("Credits Remaining: %d\n", remainingCredits);
