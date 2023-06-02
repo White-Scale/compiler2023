@@ -3,9 +3,9 @@ void read(char input[]){
     char c;
     scanf("%c", &c);
     int index = 0;
-    while(c != '\n'){
-        if(c == '\0')   //我觉着应该是EOF退出的，但是不行……
-            break;
+    while(c != '\n' && c != '\0'){
+        // if(c == '\0')   //我觉着应该是EOF退出的，但是不行……
+            // break;
         input[index] = c;
         index = index + 1;
         scanf("%c", &c);
@@ -171,11 +171,11 @@ int main(){
         int charCount = 0;
         {
             int take = 0;
-            while(take < completeCount){
+            while(hasTake == 0 && take < completeCount){
                 hasTake = compareString(classList[count], completeClass[take]); //判断该课是否已修
-                if(hasTake == 1){
-                    break;  //该课已修
-                }
+                // if(hasTake == 1){
+                    // break;  //该课已修
+                // }
                 take = take + 1;
             }
         }
@@ -183,24 +183,25 @@ int main(){
             if(preLanes[count] == 0)
                 recommend = 1;
             int lane = 0;
-            while(lane < preLanes[count])   //还没有判断完所有的前置路线
+            int breakLabel = 0;
+            while(breakLabel == 0 && lane < preLanes[count])   //还没有判断完所有的前置路线
             {
                 int passLane = 1;   //是否存在没修课程
                 int judgeClassIndex = 0;
-                while(classes[count][lane][judgeClassIndex][0] != '\0')  //这条路线上还有课程
+                while(passLane == 1 && classes[count][lane][judgeClassIndex][0] != '\0')  //这条路线上还有课程
                 {
                     int i = 0;
                     int takeThis = 0;
-                    while(i < completeCount){   //遍历已修课程列表
+                    while(takeThis == 0 && i < completeCount){   //遍历已修课程列表
                         takeThis = compareString(classes[count][lane][judgeClassIndex], completeClass[i]);
-                        if(takeThis == 1)   //该课已修
-                            break;
+                        // if(takeThis == 1)   //该课已修
+                            // break;
                         i = i + 1;
                     }
                     if(takeThis == 0)   //这条路线中该门课程未修
                     {
                         passLane = 0;
-                        break;
+                        // break;
                     }
                     else {  //这条路线中这门课程已修，前去判断下一门课程是否已修
                         judgeClassIndex = judgeClassIndex + 1;    //判断这条路线中下一门课是否已修
@@ -209,7 +210,7 @@ int main(){
                 if(passLane == 1)   //存在一条前置路线已修完，可做推荐
                 {
                     recommend = 1;
-                    break;
+                    breakLabel = 1;
                 }
                 else    //该条前置路线没完成，去判断下一条路线
                     lane = lane + 1;    //判断下一条前置路线是否全部修完
