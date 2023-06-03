@@ -43,12 +43,12 @@ int main(){
 
     int count = 0;
 
-    int recommend = 0;  //是否推荐该课
+    int recommend = 0;  
     int hasTake = 0;
 
     int take, finalResult;
     int breakLabel = 0;
-    int passLane = 1;   //是否存在没修课程
+    int passLane = 1;   
     int judgeClassIndex = 0;
     int takeThis = 0;
     {
@@ -139,6 +139,7 @@ int main(){
         }
         else    //出现，但未修
         {
+            // printf("credits:%f",credit);
             remainingCredits = remainingCredits + credit;
         }
 
