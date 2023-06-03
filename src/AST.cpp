@@ -354,6 +354,9 @@ namespace AST{
                 lval = context.builder().CreateSIToFP(lval, rtype);
             } else if (ltype->isFloatTy() && rtype->isIntegerTy()) {
                 rval = context.builder().CreateSIToFP(rval, ltype);
+            } else if (ltype->isIntegerTy()&&rtype->isIntegerTy()){
+                lval = context.builder().CreateIntCast(lval,llvm::Type::getInt32Ty(context.getLLVMContext()),true);
+                rval = context.builder().CreateIntCast(rval,llvm::Type::getInt32Ty(context.getLLVMContext()),true);
             }
         }
         llvm::Value* ret = NULL;
