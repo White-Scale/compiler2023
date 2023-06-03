@@ -1,0 +1,362 @@
+int printf(char[] a,...);
+int scanf(char[] a,...);
+int read(char[] input){
+    char[1] c;
+    char[3] pattern;
+    int index = 0;
+    pattern[0] = '%';
+    pattern[1] = 'c';
+    pattern[2] = '\0';
+
+    scanf(pattern, c);
+
+    while(c[0] != '\n' && c[0] != '\0'){
+        input[index] = c[0];
+        index = index + 1;
+        scanf(pattern, c);
+    }
+    input[index] = '\0';
+    return 0;
+}
+int main(){
+    char[101][5] classList;
+    int credit;
+    char[101][8][8][5] classes; //[w][x][y][z]:w门课，每门有x组前置课，每组y门，每门课名字数组为z
+    float totalGrade = 0;
+    int attemptCredits = 0;
+    int completedCredits = 0;
+    int remainingCredits = 0;
+    // char recommed[100][5];
+    char[500] input;
+    char[101][5] completeClass; //[x][y]:x门已修课的课名
+    int thisClass = 0;      //所有课程数量
+    int completeCount = 0;  //已修课程数量
+    int[101] preLanes;  //每门课有多少条前置路径
+
+    int i = 0;
+    int index = 0;
+
+    int lane = 0;
+    int class = 0;
+    int charCount = 0;
+
+    int hasLane = 0;
+
+    float GPA, rem;
+
+    int GPA1, GPA2;
+
+    int count = 0;
+
+    int recommend = 0;  
+    int hasTake = 0;
+
+    int take, finalResult;
+    int breakLabel = 0;
+    int passLane = 1;   
+    int judgeClassIndex = 0;
+    int takeThis = 0;
+
+    char[12] pattern1;
+    char[21] pattern2;
+    char[21] pattern3;
+    char[23] pattern4;
+    char[2]  pattern5;
+    char[31] pattern6;
+    char[27] pattern7;
+
+    char[8] debug;
+    debug[0] = 100;
+    debug[1] = 101;
+    debug[2] = 98;
+    debug[3] = 20;
+    debug[4] = 37;
+    debug[5] = 100;
+    debug[6] = 10;
+    debug[7] = 0;
+
+    pattern1[0] = 71;
+    pattern1[1] = 80;
+    pattern1[2] = 65;
+    pattern1[3] = 58;
+    pattern1[4] = 32;
+    pattern1[5] = 37;
+    pattern1[6] = 100;
+    pattern1[7] = 46;
+    pattern1[8] = 37;
+    pattern1[9] = 100;
+    pattern1[10] = 10;
+    pattern1[11] = 0;
+
+    pattern2[0] = 72;
+    pattern2[1] = 111;
+    pattern2[2] = 117;
+    pattern2[3] = 114;
+    pattern2[4] = 115;
+    pattern2[5] = 32;
+    pattern2[6] = 65;
+    pattern2[7] = 116;
+    pattern2[8] = 116;
+    pattern2[9] = 101;
+    pattern2[10] = 109;
+    pattern2[11] = 112;
+    pattern2[12] = 116;
+    pattern2[13] = 101;
+    pattern2[14] = 100;
+    pattern2[15] = 58;
+    pattern2[16] = 32;
+    pattern2[17] = 37;
+    pattern2[18] = 100;
+    pattern2[19] = 10;
+    pattern2[20] = 0;
+
+    pattern3[0] = 72;
+    pattern3[1] = 111;
+    pattern3[2] = 117;
+    pattern3[3] = 114;
+    pattern3[4] = 115;
+    pattern3[5] = 32;
+    pattern3[6] = 67;
+    pattern3[7] = 111;
+    pattern3[8] = 109;
+    pattern3[9] = 112;
+    pattern3[10] = 108;
+    pattern3[11] = 101;
+    pattern3[12] = 116;
+    pattern3[13] = 101;
+    pattern3[14] = 100;
+    pattern3[15] = 58;
+    pattern3[16] = 32;
+    pattern3[17] = 37;
+    pattern3[18] = 100;
+    pattern3[19] = 10;
+    pattern3[20] = 0;
+
+    pattern4[0] = 67;
+    pattern4[1] = 114;
+    pattern4[2] = 101;
+    pattern4[3] = 100;
+    pattern4[4] = 105;
+    pattern4[5] = 116;
+    pattern4[6] = 115;
+    pattern4[7] = 32;
+    pattern4[8] = 82;
+    pattern4[9] = 101;
+    pattern4[10] = 109;
+    pattern4[11] = 97;
+    pattern4[12] = 105;
+    pattern4[13] = 110;
+    pattern4[14] = 105;
+    pattern4[15] = 110;
+    pattern4[16] = 103;
+    pattern4[17] = 58;
+    pattern4[18] = 32;
+    pattern4[19] = 37;
+    pattern4[20] = 100;
+    pattern4[21] = 10;
+    pattern4[22] = 0;
+
+    pattern5[0] = 10;
+    pattern5[1] = 0;
+
+    pattern6[0] = 80;
+    pattern6[1] = 111;
+    pattern6[2] = 115;
+    pattern6[3] = 115;
+    pattern6[4] = 105;
+    pattern6[5] = 98;
+    pattern6[6] = 108;
+    pattern6[7] = 101;
+    pattern6[8] = 32;
+    pattern6[9] = 67;
+    pattern6[10] = 111;
+    pattern6[11] = 117;
+    pattern6[12] = 114;
+    pattern6[13] = 115;
+    pattern6[14] = 101;
+    pattern6[15] = 115;
+    pattern6[16] = 32;
+    pattern6[17] = 116;
+    pattern6[18] = 111;
+    pattern6[19] = 32;
+    pattern6[20] = 84;
+    pattern6[21] = 97;
+    pattern6[22] = 107;
+    pattern6[23] = 101;
+    pattern6[24] = 32;
+    pattern6[25] = 78;
+    pattern6[26] = 101;
+    pattern6[27] = 120;
+    pattern6[28] = 116;
+    pattern6[29] = 10;
+    pattern6[30] = 0;
+
+    pattern7[0] = 32;
+    pattern7[1] = 32;
+    pattern7[2] = 78;
+    pattern7[3] = 111;
+    pattern7[4] = 110;
+    pattern7[5] = 101;
+    pattern7[6] = 32;
+    pattern7[7] = 45;
+    pattern7[8] = 32;
+    pattern7[9] = 67;
+    pattern7[10] = 111;
+    pattern7[11] = 110;
+    pattern7[12] = 103;
+    pattern7[13] = 114;
+    pattern7[14] = 97;
+    pattern7[15] = 116;
+    pattern7[16] = 117;
+    pattern7[17] = 108;
+    pattern7[18] = 97;
+    pattern7[19] = 116;
+    pattern7[20] = 105;
+    pattern7[21] = 111;
+    pattern7[22] = 110;
+    pattern7[23] = 115;
+    pattern7[24] = 33;
+    pattern7[25] = 10;
+    pattern7[26] = 0;
+
+
+
+    {
+        i = 0;
+        while(i < 101)
+        {
+            i = i + 1;
+            preLanes[i] = 0;
+        }
+    }
+    read(input);
+
+    while (input[0] != '\0'){   //还有新课
+        //开始针对培养方案中某一门课进行处理
+        index = 0;
+
+        {
+            while(input[index] != '|')
+            {
+                classList[thisClass][index] = input[index];
+                index = index + 1;
+            }
+            classList[thisClass][index] = '\0';
+            index = index + 1;  //escape '|'
+        }
+        credit = input[index] - '0';
+        printf(debug,credit);
+        index = index + 2;  //escape credit and '|'
+        lane = 0;
+        class = 0;
+        charCount = 0;
+
+        hasLane = 0;
+        if(input[index] != '|')
+            hasLane = 1;    //需要在最后的lane数量上+1，因为下买你的lane统计的是分号数目
+        while(input[index] != '|'){
+            printf(debug,index);
+            if(input[index] == ';') //将有一条新的前置路线
+            {
+                classes[thisClass][lane][class][charCount] = '\0';  //为该条线路最后一课封口
+                classes[thisClass][lane][class+1][0] = '\0';    //该条路线下没有下一节课了
+                lane = lane + 1;
+                class = 0;
+                charCount = 0;
+            }
+            else if(input[index] == ',')    //该路线下的下一门课
+            {
+                classes[thisClass][lane][class][charCount] = '\0';  //为该门课封口
+                class = class + 1;
+                charCount = 0;
+            }
+            else{
+                printf(debug,credit);
+                classes[thisClass][lane][class][charCount] = input[index];
+                printf(debug,credit);
+                charCount = charCount + 1;
+                printf(debug,credit);
+            }
+            index = index + 1;  //读取下一个字符
+            printf(debug,index);
+            printf(debug,credit);
+        }
+        printf(debug,credit);
+        classes[thisClass][lane][class][charCount] = '\0';  //为最后一条线路最后一课封口
+        classes[thisClass][lane][class+1][0] = '\0';    //该条路线下没有下一节课了
+        preLanes[thisClass] = lane + hasLane;
+        classes[thisClass][lane+hasLane][class][charCount] = '\0';  //没有下一条路线了
+        printf(debug,credit);
+        index = index + 1;  //escapa '|'
+        if(input[index] != '\0')    //这门课有分，且及格
+        {
+            int t = 0;
+            // printf(debug,1);
+            attemptCredits = attemptCredits + credit;
+            printf(debug,credit);
+            if(input[index] == 'F'){    //已修，挂科
+                // printf(debug,3);
+                remainingCredits = remainingCredits + credit;
+                printf(debug,credit);
+            }
+            else{
+                // printf(debug,2);
+                while(classList[thisClass][t] != '\0')
+                {
+                    completeClass[completeCount][t] = classList[thisClass][t]; //复制当前课程
+                    t = t + 1; 
+                }
+                completeClass[completeCount][t] = '\0';
+                completedCredits = completedCredits + credit;
+                printf(debug,credit);
+                if(input[index] == 'A')
+                    totalGrade = totalGrade + 4.0 * credit;
+                else if(input[index] == 'B')
+                    totalGrade = totalGrade + 3.0 * credit;
+                else if(input[index] == 'C')
+                    totalGrade = totalGrade + 2.0 * credit;
+                else if(input[index] == 'D')
+                    totalGrade = totalGrade + 1.0 * credit;
+                printf(debug,credit);
+                completeCount = completeCount + 1;  //修了一门课
+            }
+        }
+        else    //出现，但未修
+        {
+            // int temp;
+            // temp = credit;
+            printf(debug,credit);
+            remainingCredits = remainingCredits + credit;
+        }
+
+        thisClass = thisClass + 1;  //处理下一门课
+        read(input);
+    }
+
+    if(attemptCredits == 0)
+        GPA = 0.0;
+    else
+        GPA = totalGrade / attemptCredits;
+    GPA1 = GPA;
+    GPA = GPA * 10 - GPA1 * 10;
+    GPA2 = GPA;
+    rem = GPA * 10 - GPA2 * 10;
+    if(rem > 5) GPA2 = GPA2 + 1;
+    if(GPA2 == 10)
+    {
+        GPA2 = 0;
+        GPA1 = GPA1 + 1;
+    }
+    printf(pattern1, GPA1, GPA2);
+    printf(pattern2, attemptCredits);
+    printf(pattern3, completedCredits);
+    printf(pattern4, remainingCredits);
+    printf(pattern5);
+    printf(pattern6);
+    if(remainingCredits == 0){
+        printf(pattern7);
+    }
+    count = 0;
+
+    return 0;
+}

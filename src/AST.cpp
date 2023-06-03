@@ -243,7 +243,9 @@ namespace AST{
         llvm::Value* thenValue = _then->CodeGen(context);
         context.builder().CreateBr(mergeBlock);
         context.builder().SetInsertPoint(elseBlock);
-        llvm::Value* elseValue = NULL;
+        if(_else!=nullptr){
+            llvm::Value* elseValue = _else->CodeGen(context);
+        }
         context.builder().CreateBr(mergeBlock);
         //generate code for merge
         context.builder().SetInsertPoint(mergeBlock);

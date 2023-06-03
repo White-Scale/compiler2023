@@ -47,6 +47,7 @@ int main(int argc, char **argv)
     std::string inputFilename = std::string(argv[1]);
     std::string outputFilename = replaceExtensionWithBC(inputFilename);
     
+    
     //generate dot file for AST     ./cmmc ../test/1.cmm -v
     if(argc == 3 && std::string(argv[2]) == "-v") {
         std::string dotFilename = inputFilename + ".dot";
@@ -63,6 +64,7 @@ int main(int argc, char **argv)
     }
 
     llvm::WriteBitcodeToFile(*(cgc._module), outputFile);
+    cgc.getModule()->print(llvm::outs(),nullptr);
     outputFile.close();
     return 0;
 }
