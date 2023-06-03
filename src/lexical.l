@@ -15,6 +15,12 @@ ID [a-zA-Z][a-zA-Z_0-9]*
 
 
 %%
+"//".*"\n" {printf("comment:%s",yytext);}
+"'"."'" {yylval.Int = yytext[1];return INT;}
+"'\\n'" {yylval.Int = '\n';return INT;}
+"'\\t'" {yylval.Int = '\t';return INT;}
+"'\\\\'" {yylval.Int = '\\';return INT;}
+"'\\0'" {yylval.Int = '\0';return INT;}
 ";" {return SEMI;}
 "," {return COMMA;}
 "=" {return ASSIGNOP;}
