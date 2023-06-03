@@ -1,8 +1,9 @@
 #include <stdio.h>
 void read(char input[]){
     char c;
-    scanf("%c", &c);
     int index = 0;
+
+    scanf("%c", &c);
     while(c != '\n' && c != '\0'){
         // if(c == '\0')   //我觉着应该是EOF退出的，但是不行……
             // break;
@@ -12,30 +13,6 @@ void read(char input[]){
     }
     input[index] = '\0';
 }
-// int getName(char input[], char name[], int index){
-//     while(input[index] != '|')
-//     {
-//         name[index] = input[index];
-//         index = index + 1;
-//     }
-//     name[index] = '\0';
-//     index = index + 1;  //escape '|'
-//     return index;
-// }
-// int compareString(char str1[], char str2[]){
-//     int index = 0;
-//     while(str1[index] != '\0')
-//     {
-//         if(str2[index] == '\0')
-//             return 0;
-//         if(str2[index] != str1[index])
-//             return 0;
-//         index = index + 1;
-//     }
-//     if(str2[index] == '\0')
-//         return 1;
-//     else return 0;
-// }
 int main(){
     char classList[101][5];
     float credit;
@@ -51,8 +28,31 @@ int main(){
     int completeCount = 0;  //已修课程数量
     int preLanes[101];  //每门课有多少条前置路径
 
+    int i = 0;
+    int index = 0;
+
+    int lane = 0;
+    int class = 0;
+    int charCount = 0;
+
+    int hasLane = 0;
+
+    float GPA, rem;
+
+    int GPA1, GPA2;
+
+    int count = 0;
+
+    int recommend = 0;  //是否推荐该课
+    int hasTake = 0;
+
+    int take, finalResult;
+    int breakLabel = 0;
+    int passLane = 1;   //是否存在没修课程
+    int judgeClassIndex = 0;
+    int takeThis = 0;
     {
-        int i = 0;
+        i = 0;
         while(i < 101)
         {
             i = i + 1;
@@ -64,9 +64,8 @@ int main(){
 
     while (input[0] != '\0'){   //还有新课
         //开始针对培养方案中某一门课进行处理
-        int index = 0;
-        //getName
-        // index = getName(input, classList[thisClass], index);
+        index = 0;
+
         {
             while(input[index] != '|')
             {
@@ -78,12 +77,11 @@ int main(){
         }
         credit = input[index] - '0';
         index = index + 2;  //escape credit and '|'
-        char tempClass[5];    
-        int lane = 0;
-        int class = 0;
-        int charCount = 0;
+        lane = 0;
+        class = 0;
+        charCount = 0;
 
-        int hasLane = 0;
+        hasLane = 0;
         if(input[index] != '|')
             hasLane = 1;    //需要在最后的lane数量上+1，因为下买你的lane统计的是分号数目
         while(input[index] != '|'){
@@ -143,30 +141,26 @@ int main(){
         {
             remainingCredits = remainingCredits + credit;
         }
-        // int i = 0;
-        // while(input[i] != '\0')
-        // printf("%c", input[i++]);
-        // printf("%s", input);
+
         thisClass = thisClass + 1;  //处理下一门课
         read(input);
     }
-    float GPA;
+
     if(attemptCredits == 0)
         GPA = 0.0;
     else
         GPA = totalGrade / attemptCredits;
-    int GPA1 = GPA;
+    GPA1 = GPA;
     GPA = GPA * 10 - GPA1 * 10;
-    int GPA2 = GPA;
-    int rem = GPA * 10 - GPA2 * 10;
-    if(rem > 4) GPA2 = GPA2 + 1;
+    GPA2 = GPA;
+    rem = GPA * 10 - GPA2 * 10;
+    if(rem > 5) GPA2 = GPA2 + 1;
     if(GPA2 == 10)
     {
         GPA2 = 0;
         GPA1 = GPA1 + 1;
     }
     printf("GPA: %d.%d\n", GPA1, GPA2);
-    // printf("GPA: %f\n", GPA);
     printf("Hours Attempted: %d\n", attemptCredits);
     printf("Hours Completed: %d\n", completedCredits);
     printf("Credits Remaining: %d\n", remainingCredits);
@@ -175,18 +169,18 @@ int main(){
     if(remainingCredits == 0){
         printf("  None - Congratulations!\n");
     }
-    int count = 0;
+    count = 0;
     while (count < thisClass){
-        int recommend = 0;  //是否推荐该课
-        int hasTake = 0;
-        int charCount = 0;
+        recommend = 0;  //是否推荐该课
+        hasTake = 0;
+        charCount = 0;
         {
-            int take = 0;
+            take = 0;
             while(hasTake == 0 && take < completeCount){
                 //compareString
                 {
-                    int index = 0;
-                    int finalResult = 1;
+                    index = 0;
+                    finalResult = 1;
                     while(finalResult == 1 && classList[count][index] != '\0')
                     {
                         if(completeClass[take][index] == '\0') //length2 < length1
@@ -199,31 +193,28 @@ int main(){
                         finalResult = 0;
                     hasTake = finalResult;  //return finalResult to hasTake
                 }
-                // hasTake = compareString(classList[count], completeClass[take]); //判断该课是否已修
-                // if(hasTake == 1){
-                    // break;  //该课已修
-                // }
+
                 take = take + 1;
             }
         }
         if(hasTake == 0){//该课未修，判断是否前置已修完
             if(preLanes[count] == 0)
                 recommend = 1;
-            int lane = 0;
-            int breakLabel = 0;
+            lane = 0;
+            breakLabel = 0;
             while(breakLabel == 0 && lane < preLanes[count])   //还没有判断完所有的前置路线
             {
-                int passLane = 1;   //是否存在没修课程
-                int judgeClassIndex = 0;
+                passLane = 1;   //是否存在没修课程
+                judgeClassIndex = 0;
                 while(passLane == 1 && classes[count][lane][judgeClassIndex][0] != '\0')  //这条路线上还有课程
                 {
-                    int i = 0;
-                    int takeThis = 0;
+                    i = 0;
+                    takeThis = 0;
                     while(takeThis == 0 && i < completeCount){   //遍历已修课程列表
                         //compareString
                         {
-                            int index = 0;
-                            int finalResult = 1;
+                            index = 0;
+                            finalResult = 1;
                             while(finalResult == 1 && classes[count][lane][judgeClassIndex][index] != '\0')
                             {
                                 if(completeClass[i][index] == '\0') //length2 < length1
@@ -236,9 +227,7 @@ int main(){
                                 finalResult = 0;
                             takeThis = finalResult;  //return finalResult to hasTake
                         }
-                        // takeThis = compareString(classes[count][lane][judgeClassIndex], completeClass[i]);
-                        // if(takeThis == 1)   //该课已修
-                            // break;
+
                         i = i + 1;
                     }
                     if(takeThis == 0)   //这条路线中该门课程未修
@@ -266,7 +255,7 @@ int main(){
         if(recommend == 1)
         {
             printf("  ");
-            int index = 0;
+            index = 0;
             while(classList[count][index] != '\0')
             {
                 printf("%c", classList[count][index]);
