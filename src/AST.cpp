@@ -322,7 +322,11 @@ namespace AST{
         }
         llvm::Type* rtype = rval->getType();
         if (rtype != ltype) {
-            rval = context.builder().CreateIntCast(rval, ltype, true);
+            if(rtype->isFloatTy()&&ltype->isIntegerTy()){
+                rval = context.builder().CreateFPToSI(rval, ltype, "float_to_int");
+            }else{
+                rval = context.builder().CreateIntCast(rval, ltype, true);
+            }
         }
         //store right-hand side to into left-hand side
         context.builder().CreateStore(rval, lval);
@@ -350,6 +354,9 @@ namespace AST{
                 lval = context.builder().CreateSIToFP(lval, rtype);
             } else if (ltype->isFloatTy() && rtype->isIntegerTy()) {
                 rval = context.builder().CreateSIToFP(rval, ltype);
+            } else if (ltype->isIntegerTy()&&rtype->isIntegerTy()){
+                lval = context.builder().CreateIntCast(lval,llvm::Type::getInt32Ty(context.getLLVMContext()),true);
+                rval = context.builder().CreateIntCast(rval,llvm::Type::getInt32Ty(context.getLLVMContext()),true);
             }
         }
         llvm::Value* ret = NULL;
