@@ -1059,10 +1059,9 @@ bash ../scripts/cmmc-clang.sh ../test/1.cmm c.out
 ```c
 int main()
 {
-    int a=100;
+    int a=2;
     float b=0.0;
-    int c;
-    c = -2;
+    char ch = 'B';
 }
 ```
 2. AST
@@ -1075,13 +1074,13 @@ source_filename = "main"
 
 define i32 @main() {
 entry:
-%a = alloca i32
-%b = alloca float
-%c = alloca i32
-store float 0.000000e+00, float* %b
-store i32 100, i32* %a
-store i32 -2, i32* %c
-ret i32 undef
+  %a = alloca i32
+  %b = alloca float
+  %ch = alloca i8
+  store i8 66, i8* %ch
+  store float 0.000000e+00, float* %b
+  store i32 100, i32* %a
+  ret i32 undef
 }
 ```
 
@@ -1096,8 +1095,12 @@ int main()
 {
     int[3][2] a;
     float[2] b;
+    char[5] h; 
     a[2][1] = 5;
     b[1] = 0.0;
+    h[0] = 'a';
+    h[1] = 'b';
+    h[2] = 'c';
 }
 ```
 2. AST
@@ -1111,14 +1114,21 @@ source_filename = "main"
 
 define i32 @main() {
 entry:
-%a = alloca [2 x [3 x i32]]
-%b = alloca [2 x float]
-%arraytmp = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %a, i32 0, i32 2
-%arraytmp1 = getelementptr [3 x i32], [3 x i32]* %arraytmp, i32 0, i32 1
-store i32 5, i32* %arraytmp1
-%arraytmp2 = getelementptr [2 x float], [2 x float]* %b, i32 0, i32 1
-store float 0.000000e+00, float* %arraytmp2
-ret i32 undef
+  %a = alloca [2 x [3 x i32]]
+  %b = alloca [2 x float]
+  %h = alloca [5 x i8]
+  %arraytmp = getelementptr [2 x [3 x i32]], [2 x [3 x i32]]* %a, i32 0, i32 2
+  %arraytmp1 = getelementptr [3 x i32], [3 x i32]* %arraytmp, i32 0, i32 1
+  store i32 5, i32* %arraytmp1
+  %arraytmp2 = getelementptr [2 x float], [2 x float]* %b, i32 0, i32 1
+  store float 0.000000e+00, float* %arraytmp2
+  %arraytmp3 = getelementptr [5 x i8], [5 x i8]* %h, i32 0, i32 0
+  store i8 97, i8* %arraytmp3
+  %arraytmp4 = getelementptr [5 x i8], [5 x i8]* %h, i32 0, i32 1
+  store i8 98, i8* %arraytmp4
+  %arraytmp5 = getelementptr [5 x i8], [5 x i8]* %h, i32 0, i32 2
+  store i8 99, i8* %arraytmp5
+  ret i32 undef
 }
 ```
 
@@ -1621,4 +1631,18 @@ ret i32 undef
 3. 测试结果
 
     ![image/sort3.png](image/mat3.png)
+
+### 选课助手
+
+1. 测试代码
+
+    见`../test/3.cmm`.
+
+2. 运行结果
+
+    ![image/sort1.png](image/adv1.png)
+
+3. 测试结果
+
+    ![image/sort3.png](image/adv2.png)
 
